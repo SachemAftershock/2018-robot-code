@@ -59,10 +59,10 @@ public class SWDrive {
 		double[] output = { leftOutput, rightOutput };
 		normalize(output);
 
-		leftBack.set(ControlMode.Current, output[0]);
-		leftFront.set(ControlMode.Current, output[0]);
-		rightBack.set(ControlMode.Current, output[1]);
-		rightFront.set(ControlMode.Current, output[1]);
+		leftBack.set(ControlMode.PercentOutput, output[0]);
+		leftFront.set(ControlMode.PercentOutput, output[0]);
+		rightBack.set(ControlMode.PercentOutput, output[1]);
+		rightFront.set(ControlMode.PercentOutput, output[1]);
 	}
 
 	/**
