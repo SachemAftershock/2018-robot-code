@@ -10,12 +10,21 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotInit() {
 		pDriver = new XboxController(0);
-		
 		drive = SWDrive.getInstance();
 	}
 
 	@Override
 	public void teleopPeriodic() {
 		drive.drive(pDriver);
+	}
+	
+	@Override
+	public void autonomousInit() {
+		drive.driveSetDistance(12);
+	}
+	
+	@Override
+	public void autonomousPeriodic() {
+		drive.driveDistance();
 	}
 }

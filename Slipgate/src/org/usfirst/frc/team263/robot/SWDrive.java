@@ -21,6 +21,7 @@ public class SWDrive {
 	private static SWDrive mInstance = new SWDrive();
 	private TalonSRX mLeftMaster, mLeftSlave, mRightMaster, mRightSlave;
 	private AHRS mNavX;
+	private double leftSetpoint, rightSetpoint;
 
 	public static SWDrive getInstance() {
 		return mInstance;
@@ -30,11 +31,15 @@ public class SWDrive {
 	 * Constructor for SWDrive class.
 	 */
 	private SWDrive() {
+		leftSetpoint = 0;
+		rightSetpoint = 0;
+		
 		mLeftMaster = new TalonSRX(Constants.kLeftMasterDrivePort);
-		mLeftMaster.setNeutralMode(NeutralMode.Coast);
+  		mLeftMaster.setNeutralMode(NeutralMode.Brake);
 		mLeftMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-		mLeftMaster.setSensorPhase(false);
-		mLeftMaster.setInverted(true);
+		mLeftMaster.setSelectedSensorPosition(0, 0, 0);
+		mLeftMaster.setSensorPhase(true);
+		mLeftMaster.setInverted(false);
 		mLeftMaster.config_kP(0, Constants.kDriveKp, 0);
 		mLeftMaster.config_kI(0, Constants.kDriveKi, 0);
 		mLeftMaster.config_kD(0, Constants.kDriveKd, 0);
@@ -42,16 +47,19 @@ public class SWDrive {
 		mLeftMaster.config_IntegralZone(0, Constants.kDriveIZone, 0);
 		mLeftMaster.configClosedloopRamp(0, Constants.kDriveRampRate);
 		mLeftMaster.configOpenloopRamp(0, Constants.kDriveRampRate);
+		mLeftMaster.configAllowableClosedloopError(0, Constants.kDriveError, 0);
 
 		mLeftSlave = new TalonSRX(Constants.kLeftSlaveDrivePort);
-		mLeftSlave.setNeutralMode(NeutralMode.Coast);
+		mLeftSlave.setInverted(true);
+		mLeftSlave.setNeutralMode(NeutralMode.Brake);
 		mLeftSlave.follow(mLeftMaster);
 
 		mRightMaster = new TalonSRX(Constants.kRightMasterDrivePort);
-		mRightMaster.setNeutralMode(NeutralMode.Coast);
+		mRightMaster.setNeutralMode(NeutralMode.Brake);
 		mRightMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-		mRightMaster.setSensorPhase(false);
-		mRightMaster.setInverted(false);
+		mRightMaster.setSelectedSensorPosition(0, 0, 0);
+		mRightMaster.setSensorPhase(true);
+		mRightMaster.setInverted(true);
 		mRightMaster.config_kP(0, Constants.kDriveKp, 0);
 		mRightMaster.config_kI(0, Constants.kDriveKi, 0);
 		mRightMaster.config_kD(0, Constants.kDriveKd, 0);
@@ -59,9 +67,11 @@ public class SWDrive {
 		mRightMaster.config_IntegralZone(0, Constants.kDriveIZone, 0);
 		mRightMaster.configClosedloopRamp(0, Constants.kDriveRampRate);
 		mRightMaster.configOpenloopRamp(0, Constants.kDriveRampRate);
+		mRightMaster.configAllowableClosedloopError(0, Constants.kDriveError, 0);
 
 		mRightSlave = new TalonSRX(Constants.kRightSlaveDrivePort);
-		mRightSlave.setNeutralMode(NeutralMode.Coast);
+		mRightSlave.setInverted(true);
+		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 
 		mNavX = new AHRS(SPI.Port.kMXP);
@@ -82,28 +92,38 @@ public class SWDrive {
 		// TODO: Add kinematic expressions.
 		// TODO: Add autonomous support.
 		// TODO: Add more todos.
-		double leftOutput = deadband(controller.getY(Hand.kLeft), 0.1)
+		double leftOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
 				- Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
-		double rightOutput = deadband(controller.getY(Hand.kLeft), 0.1)
+		double rightOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
 				+ Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
 
 		double[] output = { leftOutput, rightOutput };
 		normalize(output);
-
+		
 		mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 		mRightMaster.set(ControlMode.PercentOutput, output[1]);
 	}
 
 	/**
-	 * Drives a given distance.
+	 * Updates setpoint for autonomous driving.
 	 * 
 	 * @param distanceInInches
 	 *            The distance to drive in inches
 	 */
-	public void driveDistanceStraight(double distanceInInches) {
+	public void driveSetDistance(double distanceInInches) {
 		double naturalUnitDistance = distanceInInches / Constants.kWheelCircumference * Constants.kUnitsPerRotationEnc;
-		mLeftMaster.set(ControlMode.MotionMagic, mLeftMaster.getSelectedSensorPosition(0) + naturalUnitDistance);
-		mRightMaster.set(ControlMode.MotionMagic, mRightMaster.getSelectedSensorPosition(0) + naturalUnitDistance);
+		leftSetpoint = mLeftMaster.getSelectedSensorPosition(0) + naturalUnitDistance;
+		rightSetpoint = mRightMaster.getSelectedSensorPosition(0) + naturalUnitDistance;
+	}
+	
+	/**
+	 * Uses a PIDF to drive autonomously to setpoint.
+	 * 
+	 * @see driveSetDistance(double distanceInInches)
+	 */
+	public void driveDistance() {
+		mLeftMaster.set(ControlMode.Position, leftSetpoint);
+		mRightMaster.set(ControlMode.Position, rightSetpoint);
 	}
 
 	/**
