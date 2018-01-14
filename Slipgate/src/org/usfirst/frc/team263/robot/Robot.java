@@ -14,17 +14,33 @@ public class Robot extends TimedRobot {
 	}
 
 	@Override
+	public void teleopInit() {
+		drive.setOpenLoop();
+	}
+	
+	@Override
 	public void teleopPeriodic() {
 		drive.drive(pDriver);
 	}
 	
 	@Override
 	public void autonomousInit() {
-		drive.driveSetDistance(12);
+		drive.setLinearDistance(12);
 	}
 	
 	@Override
 	public void autonomousPeriodic() {
-		drive.driveDistance();
+		drive.drive(pDriver);
+	}
+	
+	@Override
+	public void testInit() {
+		drive.zeroGyro();
+		drive.setRotationTheta(-35);
+	}
+	
+	@Override
+	public void testPeriodic() {
+		drive.drive(pDriver);
 	}
 }
