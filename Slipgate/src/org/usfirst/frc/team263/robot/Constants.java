@@ -10,6 +10,13 @@ public class Constants {
 	final static double kDriveKi = 0.0;
 	final static double kDriveKd = 0.05;
 	final static double kDriveKf = 0.0;
+	final static double kDriveRKp = 0.005;
+	final static double kDriveRKi = 0.00001;
+	final static double kDriveRKd = 0.001;
+	final static double kDriveRKf = 0.00;
+	final static double kDriveREpsilon = 5;
+	final static int kDriveAccel = 1000;
+	final static int kDriveCruiseVelocity = 5000;
 	final static int kDriveError = 100;
 	final static int kDriveIZone = 200;
 	final static int kDriveRampRate = 256;
