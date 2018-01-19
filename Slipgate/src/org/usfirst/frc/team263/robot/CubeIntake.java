@@ -22,7 +22,6 @@ public class CubeIntake {
 		if (pDriver.getAButtonPressed()) {
 			mRightTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed / 2);
 			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed / 2);
-			System.out.println("thing1");
 		}
 		if (pDriver.getXButtonPressed()) {
 			mRightTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
@@ -35,6 +34,10 @@ public class CubeIntake {
 		if (pDriver.getBButtonPressed()) {
 			mRightTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed / 2);
 			mLeftTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed / 2);
+		}
+		else {
+			mRightTalon.set(ControlMode.PercentOutput, 0);
+			mLeftTalon.set(ControlMode.PercentOutput, 0);
 		}
 	}
 

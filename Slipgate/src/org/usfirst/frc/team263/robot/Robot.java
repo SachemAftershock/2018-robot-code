@@ -6,10 +6,12 @@ import edu.wpi.first.wpilibj.XboxController;
 public class Robot extends TimedRobot {
 	XboxController pDriver;
 	SWDrive drive;
+	CubeIntake intake;
 
 	@Override
 	public void robotInit() {
 		pDriver = new XboxController(0);
+		intake = CubeIntake.getInstance();
 		drive = SWDrive.getInstance();
 	}
 
@@ -42,5 +44,6 @@ public class Robot extends TimedRobot {
 	@Override
 	public void testPeriodic() {
 		drive.drive(pDriver);
+		intake.drive(pDriver);
 	}
 }
