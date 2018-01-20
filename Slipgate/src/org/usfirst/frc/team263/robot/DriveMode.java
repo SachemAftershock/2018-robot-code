@@ -1,5 +1,5 @@
 package org.usfirst.frc.team263.robot;
 
 public enum DriveMode {
-	eOpenLoop, eRotational, eLinear, eCurve;
+	eOpenLoop, eRotational, eLinear, eCurve, eCubeAssist;
 }

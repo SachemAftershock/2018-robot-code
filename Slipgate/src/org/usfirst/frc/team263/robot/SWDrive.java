@@ -116,7 +116,8 @@ public class SWDrive {
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
 			} else if (mMode == DriveMode.eRotational) {
-				// If this is the first loop of the PID, the PID must be initalized.
+				// If this is the first loop of the PID, the PID must be
+				// initalized.
 				if (mPreviousMode != DriveMode.eRotational) {
 					PidController.initRotationalPid(Constants.kDriveRKp, Constants.kDriveRKi, Constants.kDriveRKd,
 							Constants.kDriveRKf, mTheta);
@@ -131,9 +132,44 @@ public class SWDrive {
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
 			} else if (mMode == DriveMode.eLinear) {
 				// TODO: add motion profiling to linear movement.
-				// Using PIDF with encoders right now to drive directly to the setpoints.
+				// Using PIDF with encoders right now to drive directly to the
+				// setpoints.
 				mLeftMaster.set(ControlMode.Position, mLeftSetpoint);
 				mRightMaster.set(ControlMode.Position, mRightSetpoint);
+			} else if (mMode == DriveMode.eCubeAssist) {
+				// TODO: add distance information. This can be done in the
+				// future after we decide on where the Limelight is mounted.
+				if (Limelight.isTarget()) {
+					// If this is the first loop of the PID, the PID must be
+					// initalized.
+					if (mPreviousMode != DriveMode.eRotational) {
+						PidController.initRotationalPid(Constants.kDriveRKp, Constants.kDriveRKi, Constants.kDriveRKd,
+								Constants.kDriveRKf, mNavX.getYaw() - Limelight.getTx());
+					}
+					double leftOutput = PidController.getPidOutput();
+					double rightOutput = -PidController.getPidOutput();
+
+					double[] output = { leftOutput, rightOutput };
+					normalize(output);
+
+					mLeftMaster.set(ControlMode.PercentOutput, output[0]);
+					mRightMaster.set(ControlMode.PercentOutput, output[1]);
+				} else {
+					if (!ControllerRumble.exists) {
+						(new ControllerRumble(controller, 2)).start();
+					}
+
+					double leftOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
+							- Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
+					double rightOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
+							+ Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
+
+					double[] output = { leftOutput, rightOutput };
+					normalize(output);
+
+					mLeftMaster.set(ControlMode.PercentOutput, output[0]);
+					mRightMaster.set(ControlMode.PercentOutput, output[1]);
+				}
 			}
 
 			// Set mode to previous mode for SM purposes.
