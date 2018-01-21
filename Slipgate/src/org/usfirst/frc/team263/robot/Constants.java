@@ -23,7 +23,11 @@ public class Constants {
 	final static int kUnitsPerRotationEnc = 4096;
 	final static int kWheelRadiusInches = 3;
 	final static double kWheelCircumference = 2 * kWheelRadiusInches * Math.PI;
-	final static int kLeftCubeWheel = 4;
-	final static int kRightCubeWheel = 5;
-	final static double kCubeWheelSpeed= 0.2;
+	final static int kLeftCubeWheel = 1;
+	final static int kRightCubeWheel = 0;
+	final static double kCubeWheelSpeed= 0.3;
+	final static int kCubeLeftLimitSwitch = 0;
+	final static int kCubeRightLimitSwitch = 1;
+	//final static int kLeftCubeSolenoid = 4;
+	//final static int kRightCubeSolenoid = 5;
 }
