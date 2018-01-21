@@ -24,7 +24,7 @@ public class ControllerRumble extends Thread {
 	 *            Amount of times to rumble
 	 */
 	public ControllerRumble(XboxController stick, int occurence) {
-		this(new XboxController[] { stick }, occurence, 0.25);
+		this(new XboxController[] { stick }, occurence, 0.25d);
 	}
 
 	/**
@@ -46,7 +46,7 @@ public class ControllerRumble extends Thread {
 	 *            Amount of times to rumble
 	 */
 	public ControllerRumble(XboxController[] sticks, int occurence) {
-		this(sticks, occurence, 0.25);
+		this(sticks, occurence, 0.25d);
 	}
 
 	/**
@@ -61,7 +61,7 @@ public class ControllerRumble extends Thread {
 		duration = length;
 		joysticks = sticks;
 		amount = occurence;
-		
+
 		exists = true;
 	}
 

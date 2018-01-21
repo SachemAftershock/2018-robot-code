@@ -66,7 +66,7 @@ public class SWDrive {
 		mLeftMaster.configAllowableClosedloopError(0, Constants.kDriveError, 0);
 
 		mLeftSlave = new TalonSRX(Constants.kLeftSlaveDrivePort);
-		mLeftSlave.setInverted(true);
+		mLeftSlave.setInverted(false);
 		mLeftSlave.setNeutralMode(NeutralMode.Brake);
 		mLeftSlave.follow(mLeftMaster);
 
@@ -75,7 +75,7 @@ public class SWDrive {
 		mRightMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
 		mRightMaster.setSelectedSensorPosition(0, 0, 0);
 		mRightMaster.setSensorPhase(true);
-		mRightMaster.setInverted(true);
+		mRightMaster.setInverted(false);
 		mRightMaster.config_kP(0, Constants.kDriveKp, 0);
 		mRightMaster.config_kI(0, Constants.kDriveKi, 0);
 		mRightMaster.config_kD(0, Constants.kDriveKd, 0);
@@ -88,7 +88,7 @@ public class SWDrive {
 		mRightMaster.configAllowableClosedloopError(0, Constants.kDriveError, 0);
 
 		mRightSlave = new TalonSRX(Constants.kRightSlaveDrivePort);
-		mRightSlave.setInverted(true);
+		mRightSlave.setInverted(false);
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 
@@ -106,9 +106,9 @@ public class SWDrive {
 		synchronized (this) {
 			if (mMode == DriveMode.eOpenLoop) {
 				double leftOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
-						- Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
-				double rightOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
 						+ Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
+				double rightOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
+						- Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
@@ -122,8 +122,8 @@ public class SWDrive {
 					PidController.initRotationalPid(Constants.kDriveRKp, Constants.kDriveRKi, Constants.kDriveRKd,
 							Constants.kDriveRKf, mTheta);
 				}
-				double leftOutput = PidController.getPidOutput();
-				double rightOutput = -PidController.getPidOutput();
+				double leftOutput = -PidController.getPidOutput();
+				double rightOutput = PidController.getPidOutput();
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
@@ -144,10 +144,10 @@ public class SWDrive {
 					// initalized.
 					if (mPreviousMode != DriveMode.eRotational) {
 						PidController.initRotationalPid(Constants.kDriveRKp, Constants.kDriveRKi, Constants.kDriveRKd,
-								Constants.kDriveRKf, mNavX.getYaw() - Limelight.getTx());
+								Constants.kDriveRKf, mNavX.getYaw() + Limelight.getTx());
 					}
-					double leftOutput = PidController.getPidOutput();
-					double rightOutput = -PidController.getPidOutput();
+					double leftOutput = -PidController.getPidOutput();
+					double rightOutput = PidController.getPidOutput();
 
 					double[] output = { leftOutput, rightOutput };
 					normalize(output);
@@ -159,16 +159,8 @@ public class SWDrive {
 						(new ControllerRumble(controller, 2)).start();
 					}
 
-					double leftOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
-							- Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
-					double rightOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
-							+ Constants.kTurningConstant * deadband(controller.getX(Hand.kRight), 0.1);
-
-					double[] output = { leftOutput, rightOutput };
-					normalize(output);
-
-					mLeftMaster.set(ControlMode.PercentOutput, output[0]);
-					mRightMaster.set(ControlMode.PercentOutput, output[1]);
+					mLeftMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed);
+					mRightMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed);
 				}
 			}
 
@@ -178,10 +170,17 @@ public class SWDrive {
 	}
 
 	/**
-	 * Set driving mode to open loop
+	 * Set driving mode to open loop.
 	 */
 	public void setOpenLoop() {
 		mMode = DriveMode.eOpenLoop;
+	}
+
+	/**
+	 * Set driving mode to assisted cube seeking.
+	 */
+	public void setCubeAssist() {
+		mMode = DriveMode.eCubeAssist;
 	}
 
 	/**
@@ -297,12 +296,14 @@ public class SWDrive {
 			double error = 0;
 			if (rotation) {
 				error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
-				System.out.println(error);
 				error = Math.abs(error) > Constants.kDriveREpsilon ? error : 0;
 			}
 			integral += error;
 			double u = Kp * error + Ki * integral + Kd * (error - previousError);
 			previousError = error;
+			if (Math.abs(u) < Constants.kDriveRStaticFr) {
+				u += Math.signum(u) * Constants.kDriveRStaticFr;
+			}
 			return u;
 		}
 
