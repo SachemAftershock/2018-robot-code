@@ -30,7 +30,7 @@ public class SWDrive {
 	public static enum Direction {
 		eClockwise, eCounterclockwise
 	}
-	
+
 	/**
 	 * Gets instance of singleton SWDrive.
 	 * 
@@ -151,6 +151,7 @@ public class SWDrive {
 						PidController.initRotationalPid(Constants.kDriveRKp, Constants.kDriveRKi, Constants.kDriveRKd,
 								Constants.kDriveRKf, mNavX.getYaw() + Limelight.getTx());
 					}
+					PidController.updateSP(mNavX.getYaw() + Limelight.getTx());
 					double leftOutput = -PidController.getPidOutput();
 					double rightOutput = PidController.getPidOutput();
 
@@ -297,6 +298,19 @@ public class SWDrive {
 			integral = 0;
 		}
 
+		public static double getCurrentError() {
+			return error;
+		}
+
+		/**
+		 * Gets the current setpoint of the PID controller.
+		 * 
+		 * @return The setpoint the PID is trying to achieve.
+		 */
+		public static double getSP() {
+			return setPoint;
+		}
+
 		/**
 		 * Sees if the controller is in a state of allowable error.
 		 * 
@@ -305,6 +319,16 @@ public class SWDrive {
 		 */
 		public static boolean withinEpsilon() {
 			return error <= Constants.kDriveREpsilon;
+		}
+
+		/**
+		 * Updates setpoint.
+		 * 
+		 * @param spPrime
+		 *            New setpoint.
+		 */
+		public static void updateSP(double spPrime) {
+			setPoint = spPrime;
 		}
 
 		/**
