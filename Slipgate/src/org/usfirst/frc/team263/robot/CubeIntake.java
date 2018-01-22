@@ -4,7 +4,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DigitalInput;
-//import edu.wpi.first.wpilibj.DoubleSolenoid;
 
 /**
  * Subsystem class for the cube intake.
@@ -17,7 +16,6 @@ public class CubeIntake {
 	private static CubeIntake mInstance = new CubeIntake();
 	private TalonSRX mLeftTalon, mRightTalon;
 	private DigitalInput mLeftLimitSwitch, mRightLimitSwitch;
-	// private DoubleSolenoid mCubeSolenoid;
 
 	/**
 	 * Gets instance of singleton CubeIntake.
@@ -36,8 +34,6 @@ public class CubeIntake {
 		mRightTalon = new TalonSRX(Constants.kRightCubeWheel);
 		mLeftLimitSwitch = new DigitalInput(Constants.kCubeLeftLimitSwitch);
 		mRightLimitSwitch = new DigitalInput(Constants.kCubeRightLimitSwitch);
-		// mCubeSolenoid = new DoubleSolenoid(Constants.kRightCubeSolenoid,
-		// Constants.kLeftCubeSolenoid);
 	}
 
 	/**
@@ -52,41 +48,29 @@ public class CubeIntake {
 		// TODO: Find a better mapping for this on controllers.
 		// TODO: Autonomously run wheels using either computer vision, distance
 		// reading, or other approach TBD.
-		// TODO: Implement DoubleSolenoid 
+		// TODO: Implement Solenoids 
 		
 		/*
 		 * Stops motors when either limit switch is activated
 		 * Allows cube to be sent out via X Button
 		 * 
-		 */
-		while ((mLeftLimitSwitch.get() || mRightLimitSwitch.get()) && !pDriver.getXButton()) { 
-			mLeftTalon.set(ControlMode.PercentOutput, 0);
-			mRightTalon.set(ControlMode.PercentOutput, 0);
-
-		}
-		/*
 		 * X Button sends cube out
 		 * B Button brings cube in
 		 */
+		if ((mLeftLimitSwitch.get() || mRightLimitSwitch.get()) && !pDriver.getXButton()) { 
+			mLeftTalon.set(ControlMode.PercentOutput, 0);
+			mRightTalon.set(ControlMode.PercentOutput, 0);
+		}
 		if (pDriver.getXButton()) {
 			mRightTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
-			// mCubeSolenoid.set(DoubleSolenoid.Value.kForward);
 			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
-			// mCubeSolenoid.set(DoubleSolenoid.Value.kForward);
 		} else if (pDriver.getBButton()) {
 			mRightTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
-			// mCubeSolenoid.set(DoubleSolenoid.Value.kForward);
 			mLeftTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
-			// mCubeSolenoid.set(DoubleSolenoid.Value.kForward);
 		} else {
-			//mCubeSolenoid.set(DoubleSolenoid.Value.kReverse);
-			//mCubeSolenoid.set(DoubleSolenoid.Value.kReverse);
 			mRightTalon.set(ControlMode.PercentOutput, 0);
 			mLeftTalon.set(ControlMode.PercentOutput, 0);
 		}
-		// System.out.println("R:" + rightLimitSwitch.get());
-		// System.out.println("L:" + leftLimitSwitch.get());
-		// System.out.println("");
 	}
 
 }
