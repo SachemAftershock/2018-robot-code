@@ -2,6 +2,7 @@ package org.usfirst.frc.team263.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 public class Robot extends TimedRobot {
 	XboxController pDriver, sDriver;
@@ -24,6 +25,11 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		drive.drive(pDriver);
+		if (pDriver.getBumper(Hand.kLeft) && pDriver.getBumper(Hand.kRight)) {
+			drive.setCubeAssist();
+		} else {
+			drive.setOpenLoop();
+		}
 	}
 
 	@Override
@@ -39,7 +45,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void testInit() {
 		drive.zeroGyro();
-		drive.setRotationTheta(-35);
+		drive.setRotationTheta(-90);
 	}
 
 	@Override
