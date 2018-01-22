@@ -25,5 +25,7 @@ public class Constants {
 	final static double kWheelCircumference = 2 * kWheelRadiusInches * Math.PI;
 	final static int kLeftCubeWheel = 4;
 	final static int kRightCubeWheel = 5;
-	final static double kCubeWheelSpeed= 0.2;
+	final static double kCubeWheelSpeed= 0.3;
+	final static int kCubeLeftLimitSwitch = 0;
+	final static int kCubeRightLimitSwitch = 1;
 }
