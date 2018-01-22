@@ -246,7 +246,7 @@ public class SWDrive {
 			Kf = 0;
 			rotation = true;
 			setPoint = setpoint;
-			error = 0;// rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
+			error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
 			previousError = error;
 			integral = 0;
 		}
