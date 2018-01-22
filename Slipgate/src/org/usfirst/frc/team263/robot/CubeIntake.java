@@ -57,14 +57,10 @@ public class CubeIntake {
 		 * X Button sends cube out
 		 * B Button brings cube in
 		 */
-		if ((mLeftLimitSwitch.get() || mRightLimitSwitch.get()) && !pDriver.getXButton()) { 
-			mLeftTalon.set(ControlMode.PercentOutput, 0);
-			mRightTalon.set(ControlMode.PercentOutput, 0);
-		}
 		if (pDriver.getXButton()) {
 			mRightTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
 			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
-		} else if (pDriver.getBButton()) {
+		} else if (pDriver.getBButton() && !(mLeftLimitSwitch.get() || mRightLimitSwitch.get())) {
 			mRightTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
 			mLeftTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
 		} else {
