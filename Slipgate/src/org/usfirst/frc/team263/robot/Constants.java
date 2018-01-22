@@ -28,6 +28,4 @@ public class Constants {
 	final static double kCubeWheelSpeed= 0.3;
 	final static int kCubeLeftLimitSwitch = 0;
 	final static int kCubeRightLimitSwitch = 1;
-	//final static int kLeftCubeSolenoid = 4;
-	//final static int kRightCubeSolenoid = 5;
 }
