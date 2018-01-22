@@ -25,7 +25,12 @@ public class SWDrive {
 	private AHRS mNavX;
 	private double mLeftSetpoint, mRightSetpoint;
 	private double mTheta;
+	private Direction mCubeAssistDirection;
 
+	public static enum Direction {
+		eClockwise, eCounterclockwise
+	}
+	
 	/**
 	 * Gets instance of singleton SWDrive.
 	 * 
@@ -142,7 +147,7 @@ public class SWDrive {
 				if (Limelight.isTarget()) {
 					// If this is the first loop of the PID, the PID must be
 					// initalized.
-					if (mPreviousMode != DriveMode.eRotational) {
+					if (mPreviousMode != DriveMode.eCubeAssist) {
 						PidController.initRotationalPid(Constants.kDriveRKp, Constants.kDriveRKi, Constants.kDriveRKd,
 								Constants.kDriveRKf, mNavX.getYaw() + Limelight.getTx());
 					}
@@ -159,8 +164,13 @@ public class SWDrive {
 						(new ControllerRumble(controller, 2)).start();
 					}
 
-					mLeftMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed);
-					mRightMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed);
+					if (mCubeAssistDirection == Direction.eClockwise) {
+						mLeftMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed);
+						mRightMaster.set(ControlMode.PercentOutput, -Constants.kCubeSeekSpeed);
+					} else {
+						mLeftMaster.set(ControlMode.PercentOutput, -Constants.kCubeSeekSpeed);
+						mRightMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed);
+					}
 				}
 			}
 
@@ -179,7 +189,8 @@ public class SWDrive {
 	/**
 	 * Set driving mode to assisted cube seeking.
 	 */
-	public void setCubeAssist() {
+	public void setCubeAssist(Direction direction) {
+		mCubeAssistDirection = direction;
 		mMode = DriveMode.eCubeAssist;
 	}
 
@@ -284,6 +295,16 @@ public class SWDrive {
 			error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
 			previousError = error;
 			integral = 0;
+		}
+
+		/**
+		 * Sees if the controller is in a state of allowable error.
+		 * 
+		 * @return True if controller is within allowable error, false
+		 *         otherwise.
+		 */
+		public static boolean withinEpsilon() {
+			return error <= Constants.kDriveREpsilon;
 		}
 
 		/**
