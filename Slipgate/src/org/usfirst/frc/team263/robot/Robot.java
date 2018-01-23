@@ -1,13 +1,18 @@
 package org.usfirst.frc.team263.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+
+import java.io.IOException;
+
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 public class Robot extends TimedRobot {
 	XboxController pDriver, sDriver;
 	SWDrive drive;
 	CubeIntake intake;
+	Logger logger;
 
 	@Override
 	public void robotInit() {
@@ -15,6 +20,11 @@ public class Robot extends TimedRobot {
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
 		drive = SWDrive.getInstance();
+		try {
+			logger = new Logger();
+		} catch (IOException e) {
+			DriverStation.reportError("Couldn't instantiate logger", false);
+		}
 	}
 
 	@Override
@@ -29,6 +39,13 @@ public class Robot extends TimedRobot {
 			drive.setCubeAssist();
 		} else {
 			drive.setOpenLoop();
+		}
+	}
+	
+	@Override
+	public void disabledInit() {
+		if (logger != null) {
+			logger.forceSync();
 		}
 	}
 

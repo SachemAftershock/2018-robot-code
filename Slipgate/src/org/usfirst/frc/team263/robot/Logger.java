@@ -26,6 +26,7 @@ public class Logger {
 		String fname = "/U/ROBORIO_LOG_" + dateFormat.format(new Date()) + ".log";
 		FileWriter fstream = new FileWriter(fname);
 		mWriter = new BufferedWriter(fstream);
+		System.out.println("Created Logger");
 	}
 
 	/**
@@ -40,9 +41,8 @@ public class Logger {
 	 */
 	public int write(String s, boolean forcedSync) {
 		try {
-			mWriter.write(System.nanoTime() + "\t : \t" + s);
-			mWriter.newLine();
-
+			mWriter.write(System.nanoTime() + "\t : \t" + s + '\n');
+			
 			if (forcedSync) {
 				mWriter.flush();
 			}
