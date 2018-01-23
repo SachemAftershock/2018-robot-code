@@ -6,6 +6,8 @@ import edu.wpi.first.wpilibj.XboxController;
 
 import java.io.IOException;
 
+import org.usfirst.frc.team263.robot.SWDrive.Direction;
+
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 public class Robot extends TimedRobot {
@@ -35,8 +37,10 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		drive.drive(pDriver);
-		if (pDriver.getBumper(Hand.kLeft) && pDriver.getBumper(Hand.kRight)) {
-			drive.setCubeAssist();
+		if (pDriver.getBumper(Hand.kLeft)) {
+			drive.setCubeAssist(Direction.eCounterclockwise);
+		} else if (pDriver.getBumper(Hand.kRight)) {
+			drive.setCubeAssist(Direction.eClockwise);
 		} else {
 			drive.setOpenLoop();
 		}
