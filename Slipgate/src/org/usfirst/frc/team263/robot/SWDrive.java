@@ -152,8 +152,17 @@ public class SWDrive {
 								Constants.kDriveRKf, mNavX.getYaw() + Limelight.getTx());
 					}
 					PidController.updateSP(mNavX.getYaw() + Limelight.getTx());
-					double leftOutput = -PidController.getPidOutput();
-					double rightOutput = PidController.getPidOutput();
+					
+					double leftOutput = 0;
+					double rightOutput = 0;
+					
+					if (PidController.withinEpsilon() && Limelight.getTa() < 25) {
+						leftOutput = Constants.kCubeSeekSpeed;
+						rightOutput = Constants.kCubeSeekSpeed;
+					} else {
+						leftOutput = -PidController.getPidOutput();
+						rightOutput = PidController.getPidOutput();
+					}
 
 					double[] output = { leftOutput, rightOutput };
 					normalize(output);
@@ -318,7 +327,8 @@ public class SWDrive {
 		 *         otherwise.
 		 */
 		public static boolean withinEpsilon() {
-			return error <= Constants.kDriveREpsilon;
+			error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
+			return Math.abs(error) <= Constants.kDriveREpsilon;
 		}
 
 		/**

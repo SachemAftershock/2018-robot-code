@@ -15,8 +15,8 @@ public class Constants {
 	final static double kDriveRKd = 0.000;
 	final static double kDriveRKf = 0.00;
 	final static double kDriveRStaticFr = 0.1;
-	final static double kDriveREpsilon = 1;
-	final static double kCubeSeekSpeed = 0.2;
+	final static double kDriveREpsilon = 2;
+	final static double kCubeSeekSpeed = 0.3;
 	final static int kDriveAccel = 1000;
 	final static int kDriveCruiseVelocity = 5000;
 	final static int kDriveError = 100;
