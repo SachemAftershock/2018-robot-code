@@ -79,9 +79,10 @@ public class SWDrive {
 		mRightMaster.setNeutralMode(NeutralMode.Brake);
 		mRightMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
 		mRightMaster.setSelectedSensorPosition(0, 0, 0);
+		mRightMaster.setInverted(true);
 
 		mRightSlave = new TalonSRX(Constants.kRightSlaveDrivePort);
-		mRightSlave.setInverted(false);
+		mRightSlave.setInverted(true);
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 

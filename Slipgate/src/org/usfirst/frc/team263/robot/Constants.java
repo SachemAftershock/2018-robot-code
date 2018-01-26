@@ -1,10 +1,10 @@
 package org.usfirst.frc.team263.robot;
 
 public class Constants {
-	final static int kLeftMasterDrivePort = 3;
-	final static int kLeftSlaveDrivePort = 2;
-	final static int kRightMasterDrivePort = 4;
-	final static int kRightSlaveDrivePort = 1;
+	final static int kLeftMasterDrivePort = 0;
+	final static int kLeftSlaveDrivePort = 1;
+	final static int kRightMasterDrivePort = 2;
+	final static int kRightSlaveDrivePort = 3;
 	final static int kDriveSolenoidPort = 0;
 	
 	final static double[] kTurningConstant = {0.5, 0.5};
