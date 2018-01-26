@@ -21,6 +21,7 @@ public class Constants {
 	final static int[] kDriveError = {100, 100};
 	final static int[] kDriveIZone = {200, 200};
 	final static int[] kDriveRampRate = {256, 256};
+	final static double[] kCubeSeekSpeed = {0.3, 0.3};
 	
 	//Rotational PID Constants
 	final static double[] kDriveRKp = {0.006, 0.006};
@@ -34,7 +35,6 @@ public class Constants {
 	final static int kLeftCubeWheel = 4;
 	final static int kRightCubeWheel = 5;
 	final static double kCubeWheelSpeed= 0.3;
-	final static double[] kCubeSeekSpeed = {0.3, 0.3};
 	
 	//Drivebase sensor/wheel constants
 	final static int kUnitsPerRotationEnc = 4096;
