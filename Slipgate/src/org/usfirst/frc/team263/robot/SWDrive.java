@@ -29,7 +29,7 @@ public class SWDrive {
 	private Direction mCubeAssistDirection;
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
-	private Solenoid mLeftSolenoid, mRightSolenoid;
+	private Solenoid mSolenoid;
 
 	public static enum Direction {
 		eClockwise, eCounterclockwise
@@ -84,9 +84,8 @@ public class SWDrive {
 		mRightSlave.setInverted(false);
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
-		
-		mLeftSolenoid = new Solenoid(Constants.kLeftDriveSolenoidPort);
-		mRightSolenoid = new Solenoid(Constants.kRightDriveSolenoidPort);
+
+		mSolenoid = new Solenoid(Constants.kDriveSolenoidPort);
 
 		setLowGear();
 		configureClosedLoop();
@@ -247,12 +246,10 @@ public class SWDrive {
 	 */
 	public void setGearingMode(GearingMode mode) {
 		if (mode == GearingMode.eHighGear) {
-			mLeftSolenoid.set(true);
-			mRightSolenoid.set(true);
+			mSolenoid.set(true);
 		}
 		if (mode == GearingMode.eLowGear) {
-			mLeftSolenoid.set(false);
-			mRightSolenoid.set(false);
+			mSolenoid.set(false);
 		}
 		mGearingMode = mode;
 		configureClosedLoop();

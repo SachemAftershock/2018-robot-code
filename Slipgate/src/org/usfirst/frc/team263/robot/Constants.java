@@ -5,8 +5,7 @@ public class Constants {
 	final static int kLeftSlaveDrivePort = 2;
 	final static int kRightMasterDrivePort = 4;
 	final static int kRightSlaveDrivePort = 1;
-	final static int kLeftDriveSolenoidPort = 0;
-	final static int kRightDriveSolenoidPort = 1;
+	final static int kDriveSolenoidPort = 0;
 	
 	final static double[] kTurningConstant = {0.5, 0.5};
 	final static double[] kDriveKp = {0.00, 0.00};

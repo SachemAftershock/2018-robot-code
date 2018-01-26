@@ -31,6 +31,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopInit() {
+		logger.write("Entering Teleoperated Mode", true);
 		drive.setOpenLoop();
 	}
 
@@ -55,6 +56,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
+		logger.write("Entering Autonomous Mode", true);
 		drive.setLinearDistance(12);
 	}
 
