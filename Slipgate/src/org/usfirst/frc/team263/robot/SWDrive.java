@@ -1,5 +1,9 @@
 package org.usfirst.frc.team263.robot;
 
+import org.usfirst.frc.team263.robot.Enums.Direction;
+import org.usfirst.frc.team263.robot.Enums.DriveMode;
+import org.usfirst.frc.team263.robot.Enums.GearingMode;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -30,14 +34,6 @@ public class SWDrive {
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
 	private Solenoid mSolenoid;
-
-	public static enum Direction {
-		eClockwise, eCounterclockwise
-	}
-
-	public static enum GearingMode {
-		eLowGear, eHighGear
-	}
 
 	/**
 	 * Gets instance of singleton SWDrive.

@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj.XboxController;
 
 import java.io.IOException;
 
-import org.usfirst.frc.team263.robot.SWDrive.Direction;
+import org.usfirst.frc.team263.robot.Enums.Direction;
 
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
