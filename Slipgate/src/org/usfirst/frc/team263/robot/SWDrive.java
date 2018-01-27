@@ -35,6 +35,7 @@ public class SWDrive {
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
 	private DoubleSolenoid mSolenoid;
+	private boolean mIsSetpointReached;
 
 	/**
 	 * Gets instance of singleton SWDrive.
@@ -88,6 +89,8 @@ public class SWDrive {
 		setLowGear();
 		configureClosedLoop();
 
+		mIsSetpointReached = true;
+
 		// Initialize NavX in MXP port.
 		mNavX = new AHRS(SPI.Port.kMXP);
 	}
@@ -113,6 +116,8 @@ public class SWDrive {
 
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
+
+				mIsSetpointReached = true;
 			} else if (mDriveMode == DriveMode.eRotational) {
 				// If this is the first loop of the PID, the PID must be
 				// initalized.
@@ -129,12 +134,18 @@ public class SWDrive {
 
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
+
+				mIsSetpointReached = PidController.withinEpsilon();
 			} else if (mDriveMode == DriveMode.eLinear) {
 				// TODO: add motion profiling to linear movement.
 				// Using PIDF with encoders right now to drive directly to the
 				// setpoints.
 				mLeftMaster.set(ControlMode.Position, mLeftSetpoint);
 				mRightMaster.set(ControlMode.Position, mRightSetpoint);
+
+				mIsSetpointReached = (mLeftMaster
+						.getClosedLoopError(0) <= Constants.kDriveError[mGearingMode.ordinal()])
+						&& (mRightMaster.getClosedLoopError(0) <= Constants.kDriveError[mGearingMode.ordinal()]);
 			} else if (mDriveMode == DriveMode.eCubeAssist) {
 				// TODO: add distance information. This can be done in the
 				// future after we decide on where the Limelight is mounted.
@@ -165,6 +176,8 @@ public class SWDrive {
 
 					mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 					mRightMaster.set(ControlMode.PercentOutput, output[1]);
+
+					mIsSetpointReached = PidController.withinEpsilon() && Limelight.getTa() >= 25;
 				} else {
 					if (!ControllerRumble.exists) {
 						(new ControllerRumble(controller, 2)).start();
@@ -177,6 +190,8 @@ public class SWDrive {
 						mLeftMaster.set(ControlMode.PercentOutput, -Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 						mRightMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 					}
+
+					mIsSetpointReached = false;
 				}
 			}
 
@@ -184,6 +199,15 @@ public class SWDrive {
 			mPreviousDriveMode = mDriveMode;
 			mPreviousGearingMode = mGearingMode;
 		}
+	}
+
+	/**
+	 * Returns information on whether closed loop setpoint is reached.
+	 * 
+	 * @return true if setpoint has been reached, false otherwise.
+	 */
+	public boolean isSetpointReached() {
+		return mIsSetpointReached;
 	}
 
 	/**
@@ -234,7 +258,7 @@ public class SWDrive {
 	 */
 	public void setHighGear() {
 		setGearingMode(GearingMode.eHighGear);
-		}
+	}
 
 	/**
 	 * Sets the drivetrain to a given shift mode.

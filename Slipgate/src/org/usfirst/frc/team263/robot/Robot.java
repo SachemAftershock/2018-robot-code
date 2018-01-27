@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.XboxController;
 
 import java.io.IOException;
 
+import org.usfirst.frc.team263.robot.Enums.AutoObjective;
 import org.usfirst.frc.team263.robot.Enums.Direction;
 
 import edu.wpi.first.wpilibj.GenericHID.Hand;
@@ -15,6 +16,7 @@ public class Robot extends TimedRobot {
 	SWDrive drive;
 	CubeIntake intake;
 	Logger logger;
+	Autonomous autonomous;
 
 	@Override
 	public void robotInit() {
@@ -22,6 +24,8 @@ public class Robot extends TimedRobot {
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
 		drive = SWDrive.getInstance();
+		autonomous = Autonomous.getInstance();
+		
 		try {
 			logger = new Logger();
 		} catch (IOException e) {
@@ -61,12 +65,12 @@ public class Robot extends TimedRobot {
 		if (logger != null) {
 			logger.write("Entering Autonomous Mode", true);
 		}
-		drive.setLinearDistance(12);
+		autonomous.queueObjective(AutoObjective.eForward, 12);
 	}
 
 	@Override
 	public void autonomousPeriodic() {
-		drive.drive(pDriver);
+		autonomous.drive();
 	}
 
 	@Override
