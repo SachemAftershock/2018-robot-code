@@ -11,9 +11,10 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Solenoid;
 
 /**
  * Drivebase code for a six-wheel WC-style drive.
@@ -33,7 +34,7 @@ public class SWDrive {
 	private Direction mCubeAssistDirection;
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
-	private Solenoid mSolenoid;
+	private DoubleSolenoid mSolenoid;
 
 	/**
 	 * Gets instance of singleton SWDrive.
@@ -82,7 +83,7 @@ public class SWDrive {
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 
-		mSolenoid = new Solenoid(Constants.kDriveSolenoidPort);
+		mSolenoid = new DoubleSolenoid(Constants.kDriveSolenoidPortForward, Constants.kDriveSolenoidPortReverse);
 
 		setLowGear();
 		configureClosedLoop();
@@ -233,7 +234,7 @@ public class SWDrive {
 	 */
 	public void setHighGear() {
 		setGearingMode(GearingMode.eHighGear);
-	}
+		}
 
 	/**
 	 * Sets the drivetrain to a given shift mode.
@@ -243,10 +244,10 @@ public class SWDrive {
 	 */
 	public void setGearingMode(GearingMode mode) {
 		if (mode == GearingMode.eHighGear) {
-			mSolenoid.set(true);
+			mSolenoid.set(Value.kForward);
 		}
 		if (mode == GearingMode.eLowGear) {
-			mSolenoid.set(false);
+			mSolenoid.set(Value.kReverse);
 		}
 		mGearingMode = mode;
 		configureClosedLoop();

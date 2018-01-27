@@ -8,7 +8,8 @@ public class Constants {
 	final static int kRightSlaveDrivePort = 3;
 	
 	//PCM Module ID
-	final static int kDriveSolenoidPort = 0;
+	final static int kDriveSolenoidPortForward = 0;
+	final static int kDriveSolenoidPortReverse = 1;
 	
 	//Drivebase constants
 	final static double[] kTurningConstant = {0.5, 0.5};
