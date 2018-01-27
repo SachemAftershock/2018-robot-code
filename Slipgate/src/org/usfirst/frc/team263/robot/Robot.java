@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj.XboxController;
 
 import java.io.IOException;
 
-import org.usfirst.frc.team263.robot.SWDrive.Direction;
+import org.usfirst.frc.team263.robot.Enums.Direction;
 
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
@@ -31,6 +31,9 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopInit() {
+		if (logger != null) {
+			logger.write("Entering Teleoperated Mode", true);
+		}
 		drive.setOpenLoop();
 	}
 
@@ -55,6 +58,9 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
+		if (logger != null) {
+			logger.write("Entering Autonomous Mode", true);
+		}
 		drive.setLinearDistance(12);
 	}
 
@@ -65,13 +71,16 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
-		drive.zeroGyro();
-		drive.setRotationTheta(-90);
+		drive.setOpenLoop();
 	}
 
 	@Override
 	public void testPeriodic() {
-		drive.drive(pDriver);
-		intake.drive(sDriver);
+		if (pDriver.getAButton()) {
+			drive.setHighGear();
+		}
+		if (pDriver.getXButton()) {
+			drive.setLowGear();
+		}
 	}
 }
