@@ -96,20 +96,20 @@ public class SWDrive {
 	}
 
 	/**
-	 * Method to drive robot given controller of primary driver.
+	 * Drive robot in any DriveMode.
 	 * 
-	 * @param controller
-	 *            Primary driver's controller.
+	 * @param leftY
+	 *            y component of open loop control
+	 * @param rightX
+	 *            x component of open loop control
 	 */
-	public void drive(XboxController controller) {
+	public void drive(double leftY, double rightX) {
 		synchronized (this) {
 			if (mDriveMode == DriveMode.eOpenLoop) {
-				double leftOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
-						+ Constants.kTurningConstant[mGearingMode.ordinal()]
-								* deadband(controller.getX(Hand.kRight), 0.1);
-				double rightOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
-						- Constants.kTurningConstant[mGearingMode.ordinal()]
-								* deadband(controller.getX(Hand.kRight), 0.1);
+				double leftOutput = deadband(leftY, 0.1)
+						+ Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
+				double rightOutput = deadband(leftY, 0.1)
+						- Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
@@ -179,10 +179,7 @@ public class SWDrive {
 
 					mIsSetpointReached = PidController.withinEpsilon() && Limelight.getTa() >= 25;
 				} else {
-					if (!ControllerRumble.exists) {
-						(new ControllerRumble(controller, 2)).start();
-					}
-
+					// TODO: Add back controller feedback here.
 					if (mCubeAssistDirection == Direction.eClockwise) {
 						mLeftMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 						mRightMaster.set(ControlMode.PercentOutput, -Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
@@ -199,6 +196,23 @@ public class SWDrive {
 			mPreviousDriveMode = mDriveMode;
 			mPreviousGearingMode = mGearingMode;
 		}
+	}
+
+	/**
+	 * Method to drive robot given controller of primary driver.
+	 * 
+	 * @param controller
+	 *            Primary driver's controller.
+	 */
+	public void drive(XboxController controller) {
+		drive(-controller.getY(Hand.kLeft), controller.getX(Hand.kRight));
+	}
+
+	/**
+	 * Drive robot without open loop control.
+	 */
+	public void drive() {
+		drive(0, 0);
 	}
 
 	/**

@@ -54,7 +54,7 @@ public class Autonomous {
 			break;
 		case eForward:
 			mDrive.setLinearDistance(mSetpoint);
-			mDrive.drive(new XboxController(0));
+			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
 		case eEjectCube:
