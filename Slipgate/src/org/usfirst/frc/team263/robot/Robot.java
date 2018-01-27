@@ -71,13 +71,16 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
-		drive.zeroGyro();
-		drive.setRotationTheta(-90);
+		drive.setOpenLoop();
 	}
 
 	@Override
 	public void testPeriodic() {
-		drive.drive(pDriver);
-		intake.drive(sDriver);
+		if (pDriver.getAButton()) {
+			drive.setHighGear();
+		}
+		if (pDriver.getXButton()) {
+			drive.setLowGear();
+		}
 	}
 }
