@@ -11,8 +11,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.SPI;
 
@@ -34,7 +33,7 @@ public class SWDrive {
 	private Direction mCubeAssistDirection;
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
-	private DoubleSolenoid mSolenoid;
+	private Solenoid mSolenoid;
 
 	/**
 	 * Gets instance of singleton SWDrive.
@@ -83,7 +82,7 @@ public class SWDrive {
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 
-		mSolenoid = new DoubleSolenoid(Constants.kDriveSolenoidPortForward, Constants.kDriveSolenoidPortReverse);
+		mSolenoid = new Solenoid(Constants.kDriveSolenoidPort);
 
 		setLowGear();
 		configureClosedLoop();
@@ -244,10 +243,10 @@ public class SWDrive {
 	 */
 	public void setGearingMode(GearingMode mode) {
 		if (mode == GearingMode.eHighGear) {
-			mSolenoid.set(Value.kForward);
+			mSolenoid.set(true);
 		}
 		if (mode == GearingMode.eLowGear) {
-			mSolenoid.set(Value.kReverse);
+			mSolenoid.set(false);
 		}
 		mGearingMode = mode;
 		configureClosedLoop();
