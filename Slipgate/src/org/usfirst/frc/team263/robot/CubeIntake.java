@@ -73,7 +73,7 @@ public class CubeIntake {
 	public void drive(XboxController controller) {
 		if (controller.getXButton()) {
 			drive(Constants.kCubeWheelSpeed);
-		} else if (controller.getBButton() && !(mLeftLimitSwitch.get() || mRightLimitSwitch.get())) {
+		} else if (controller.getBButton() && !isCubeIn()) {
 			drive(-Constants.kCubeWheelSpeed);
 		}
 		else {
@@ -91,12 +91,14 @@ public class CubeIntake {
 	}
 	
 	/**
-	 * Ejects a Cube until it is no longer triggering the limit switches 
+	 * Ejects a Cube until it is no longer triggering the limit switches or 0.9 seconds are up,
+	 * whichever comes first.
 	 */
 	public void autonEjectCube() {
-		while(isCubeIn()) {
-			drive(-Constants.kCubeWheelSpeed);
-			Timer.delay(0.25);//Would be optimal to have encode on here but that doesn't seem feasible. Time is next best option
+		for(int i = 0; isCubeIn() && i < 3 ; i++) {
+			drive(Constants.kCubeWheelSpeed);
+			Timer.delay(0.3);//TODO Figure out minimum time needed to eject Cube
+			//Would be optimal to have encoder on here but that doesn't seem feasible. Time is next best option
 		}
 		drive(0);
 	}
