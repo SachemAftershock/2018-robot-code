@@ -30,7 +30,7 @@ public class SWDrive {
 	private TalonSRX mLeftMaster, mLeftSlave, mRightMaster, mRightSlave;
 	private AHRS mNavX;
 	private double mLeftSetpoint, mRightSetpoint;
-	private double mTheta;
+	private double mTheta, mVelocityRatio;
 	private Direction mCubeAssistDirection;
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
@@ -59,6 +59,7 @@ public class SWDrive {
 		mLeftSetpoint = 0;
 		mRightSetpoint = 0;
 		mTheta = 0;
+		mVelocityRatio = 0;
 
 		// Initialize all master and slave motors.
 		mLeftMaster = new TalonSRX(Constants.kLeftMasterDrivePort);
@@ -190,6 +191,22 @@ public class SWDrive {
 
 					mIsSetpointReached = false;
 				}
+			} else if (mDriveMode == DriveMode.eCurve) {
+				// If this is the first loop of the PID, the PID must be
+				// initalized.
+				if (mPreviousDriveMode != DriveMode.eCurve || mPreviousGearingMode != mGearingMode) {
+					PidController.initRotationalPid(Constants.kDriveRKp[mGearingMode.ordinal()],
+							Constants.kDriveRKi[mGearingMode.ordinal()], Constants.kDriveRKd[mGearingMode.ordinal()],
+							Constants.kDriveRKf[mGearingMode.ordinal()], mTheta);
+				}
+				double leftOutput = mVelocityRatio * PidController.getPidOutput();
+				double rightOutput = PidController.getPidOutput();
+
+				double[] output = { leftOutput, rightOutput };
+				normalize(output);
+
+				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
+				mRightMaster.set(ControlMode.PercentOutput, output[1]);
 			}
 
 			// Set mode to previous mode for SM purposes.
@@ -229,6 +246,20 @@ public class SWDrive {
 	 */
 	public void setOpenLoop() {
 		mDriveMode = DriveMode.eOpenLoop;
+	}
+
+	/**
+	 * Sets up curved closed loop control.
+	 * 
+	 * @param r
+	 *            Signed distance to ICC.
+	 * @param theta
+	 *            Angular offset to travel.
+	 */
+	public void setCurveControl(double r, double theta) {
+		mTheta = theta;
+		mVelocityRatio = Kinematics.getVelocityRatio(r, Constants.kDriveWheelLength);
+		mDriveMode = DriveMode.eCurve;
 	}
 
 	/**
