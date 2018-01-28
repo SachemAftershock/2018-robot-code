@@ -36,8 +36,6 @@ public class CubeIntake {
 		
 		mLeftLimitSwitch = new DigitalInput(Constants.kCubeLeftLimitSwitch);
 		mRightLimitSwitch = new DigitalInput(Constants.kCubeRightLimitSwitch);
-		
-		mRightTalon.setInverted(true);
 	}
 	
 	// TODO: Institute some closed loop control to ensure similar wheel
@@ -66,16 +64,17 @@ public class CubeIntake {
 
 	/**
 	 * Drives the CubeIntake.
-	 * 
+	 *  X brings Cube in
+	 *  B sends Cube out
 	 * @param controller
 	 *            Controller for CubeIntake instructions.
 	 */
 	public void drive(XboxController controller) {
-		if (controller.getXButton()) {
+		if (controller.getXButton() && !isCubeIn()) {
 			drive(Constants.kCubeWheelSpeed);
-		} else if (controller.getBButton() && !isCubeIn()) {
+		} else if (controller.getBButton()) {
 			drive(-Constants.kCubeWheelSpeed);
-		}
+		
 		else {
 			drive(0);
 		}
@@ -86,7 +85,7 @@ public class CubeIntake {
 	 * @return
 	 * 		True if a Cube is in the mechanism, False otherwise.
 	 */
-	public boolean isCubeIn() {
+	public  boolean isCubeIn() {
 		return (mLeftLimitSwitch.get() || mRightLimitSwitch.get());
 	}
 	

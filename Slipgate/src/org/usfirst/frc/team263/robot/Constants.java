@@ -36,7 +36,7 @@ public class Constants {
 	// Cube Intake constants
 	final static int kLeftCubeWheel = 4;
 	final static int kRightCubeWheel = 5;
-	final static double kCubeWheelSpeed = 0.3;
+	final static double kCubeWheelSpeed = 1;
 
 	// Drivebase sensor/wheel constants
 	final static int kUnitsPerRotationEnc = 4096;
