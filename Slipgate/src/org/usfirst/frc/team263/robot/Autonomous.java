@@ -58,7 +58,7 @@ public class Autonomous {
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
 		case eEjectCube:
-			// TODO: Add cube ejection after CubeIntake team matures it.
+			mIntake.autonEjectCube();
 			mIsObjectiveFinished = true;
 			break;
 		case eCurve:
@@ -75,6 +75,7 @@ public class Autonomous {
 	 * Currently supported objectives and setpoint pairs:
 	 * - eForward: distance in inches.
 	 * - eNothing: any valid double value.
+	 * - eEjectCube: any valid double value.
 	 * 
 	 * @param objective
 	 *            Objective to queue.
