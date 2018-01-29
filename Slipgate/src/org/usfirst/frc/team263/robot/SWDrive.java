@@ -11,8 +11,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.SPI;
 
@@ -34,7 +33,7 @@ public class SWDrive {
 	private Direction mCubeAssistDirection;
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
-	private DoubleSolenoid mSolenoid;
+	private Solenoid mSolenoid;
 	private boolean mIsSetpointReached;
 
 	/**
@@ -85,7 +84,7 @@ public class SWDrive {
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 
-		mSolenoid = new DoubleSolenoid(Constants.kDriveSolenoidPortForward, Constants.kDriveSolenoidPortReverse);
+		mSolenoid = new Solenoid(Constants.kDriveSolenoidPort);
 
 		setLowGear();
 		configureClosedLoop();
@@ -164,7 +163,7 @@ public class SWDrive {
 					double leftOutput = 0;
 					double rightOutput = 0;
 
-					if (PidController.withinEpsilon() && Limelight.getTa() < 25) {
+					if (PidController.withinEpsilon() && Limelight.getTa() < 75) {
 						leftOutput = Constants.kCubeSeekSpeed[mGearingMode.ordinal()];
 						rightOutput = Constants.kCubeSeekSpeed[mGearingMode.ordinal()];
 					} else {
@@ -178,7 +177,7 @@ public class SWDrive {
 					mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 					mRightMaster.set(ControlMode.PercentOutput, output[1]);
 
-					mIsSetpointReached = PidController.withinEpsilon() && Limelight.getTa() >= 25;
+					mIsSetpointReached = PidController.withinEpsilon() && Limelight.getTa() >= 75;
 				} else {
 					// TODO: Add back controller feedback here.
 					if (mCubeAssistDirection == Direction.eClockwise) {
@@ -313,10 +312,10 @@ public class SWDrive {
 	 */
 	public void setGearingMode(GearingMode mode) {
 		if (mode == GearingMode.eHighGear) {
-			mSolenoid.set(Value.kForward);
+			mSolenoid.set(true);
 		}
 		if (mode == GearingMode.eLowGear) {
-			mSolenoid.set(Value.kReverse);
+			mSolenoid.set(false);
 		}
 		mGearingMode = mode;
 		configureClosedLoop();
