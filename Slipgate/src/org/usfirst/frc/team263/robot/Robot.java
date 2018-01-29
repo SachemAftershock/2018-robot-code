@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.GenericHID.Hand;
 public class Robot extends TimedRobot {
 	XboxController pDriver, sDriver;
 	SWDrive drive;
+	Elevator elevator;
 	CubeIntake intake;
 	Logger logger;
 
@@ -22,6 +23,7 @@ public class Robot extends TimedRobot {
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
 		drive = SWDrive.getInstance();
+		elevator = Elevator.getInstance();
 		try {
 			logger = new Logger();
 		} catch (IOException e) {
@@ -40,6 +42,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		drive.drive(pDriver);
+		elevator.drive(sDriver);
 		if (pDriver.getBumper(Hand.kLeft)) {
 			drive.setCubeAssist(Direction.eCounterclockwise);
 		} else if (pDriver.getBumper(Hand.kRight)) {

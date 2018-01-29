@@ -44,4 +44,17 @@ public class Constants {
 	// DigitalInputs Port IDs
 	final static int kCubeLeftLimitSwitch = 0;
 	final static int kCubeRightLimitSwitch = 1;
+	final static int kElevatorTopLimitSwitch = 2;
+	final static int kElevatorBottomLimitSwitch = 3;
+	
+	//Elevator Constants
+	final static double kElevatorKp = 0.0;
+	final static double kElevatorKi = 0.0;
+	final static double kElevatorKd = 0.0;
+	final static double kElevatorKf = 0.0;
+	final static int kMaxAccel = 0;
+	final static int kMaxVel = 0;
+	final static int kUnitsPerRotation = 4096;
+	final static int kMinBufferSize = 10;
+	
 }
