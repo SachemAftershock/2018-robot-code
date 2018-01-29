@@ -29,7 +29,7 @@ public class Robot extends TimedRobot {
 		drive = SWDrive.getInstance();
 		autonomous = Autonomous.getInstance();
 		compressor = new Compressor();
-	
+
 		try {
 			logger = new Logger();
 		} catch (IOException e) {
@@ -58,17 +58,17 @@ public class Robot extends TimedRobot {
 			Limelight.setCameraMode(CameraMode.eDriver);
 			drive.setOpenLoop();
 		}
-		
+
 		if (pDriver.getAButton()) {
 			drive.setHighGear();
 		}
 		if (pDriver.getXButton()) {
 			drive.setLowGear();
 		}
-		
+
 		drive.drive(pDriver);
 	}
-	
+
 	@Override
 	public void disabledInit() {
 		if (logger != null) {
@@ -103,7 +103,7 @@ public class Robot extends TimedRobot {
 		if (pDriver.getXButton()) {
 			drive.setRotationTheta(90);
 		}
-		
+
 		drive.drive(pDriver);
 	}
 }

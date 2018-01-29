@@ -30,7 +30,7 @@ public class Constants {
 	final static double[] kDriveRKd = { 0.000, 0.000 };
 	final static double[] kDriveRKf = { 0.00, 0.00 };
 	final static double[] kDriveRStaticFr = { 0.095, 0.095 };
-	final static double[] kDriveREpsilon = { 2 , 2 };
+	final static double[] kDriveREpsilon = { 2, 2 };
 
 	// Cube Intake constants
 	final static int kLeftCubeWheel = 4;

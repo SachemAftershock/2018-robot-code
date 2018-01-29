@@ -5,8 +5,6 @@ import java.util.Queue;
 
 import org.usfirst.frc.team263.robot.Enums.AutoObjective;
 
-import edu.wpi.first.wpilibj.XboxController;
-
 public class Autonomous {
 	private static Autonomous mInstance = new Autonomous();
 	private SWDrive mDrive;

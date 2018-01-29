@@ -33,31 +33,31 @@ public class CubeIntake {
 	private CubeIntake() {
 		mLeftTalon = new TalonSRX(Constants.kLeftCubeWheel);
 		mRightTalon = new TalonSRX(Constants.kRightCubeWheel);
-		
+
 		mLeftLimitSwitch = new DigitalInput(Constants.kCubeLeftLimitSwitch);
 		mRightLimitSwitch = new DigitalInput(Constants.kCubeRightLimitSwitch);
 	}
-	
+
 	// TODO: Institute some closed loop control to ensure similar wheel
 	// speeds between each wheel.
 	// TODO: Find a better mapping for this on controllers.
 	// TODO: Autonomously run wheels using either computer vision, distance
 	// reading, or other approach TBD.
-	// TODO: Implement Solenoids 
-	
+	// TODO: Implement Solenoids
+
 	/**
 	 * Drives CubeIntake subsystem with speed given by parameter
+	 * 
 	 * @param speed
-	 * 			Speed of CubeIntake
+	 *            Speed of CubeIntake
 	 */
 	public void drive(double speed) {
-		if(speed > 1){
+		if (speed > 1) {
 			speed = 1;
-		}
-		else if(speed < -1){
+		} else if (speed < -1) {
 			speed = -1;
 		}
-		
+
 		mRightTalon.set(ControlMode.PercentOutput, speed);
 		mLeftTalon.set(ControlMode.PercentOutput, speed);
 	}
@@ -74,30 +74,31 @@ public class CubeIntake {
 			drive(Constants.kCubeWheelSpeed);
 		} else if (controller.getBButton()) {
 			drive(-Constants.kCubeWheelSpeed);
-		
-		else {
+		} else {
 			drive(0);
 		}
 	}
-	
+
 	/**
 	 * Checks if a Cube is currently in the Robot
-	 * @return
-	 * 		True if a Cube is in the mechanism, False otherwise.
+	 * 
+	 * @return True if a Cube is in the mechanism, False otherwise.
 	 */
-	public  boolean isCubeIn() {
+	public boolean isCubeIn() {
 		return (mLeftLimitSwitch.get() || mRightLimitSwitch.get());
 	}
-	
+
 	/**
-	 * Ejects a Cube until it is no longer triggering the limit switches or 0.9 seconds are up,
-	 * whichever comes first.
+	 * Ejects a Cube until it is no longer triggering the limit switches or 0.9
+	 * seconds are up, whichever comes first.
 	 */
 	public void autonEjectCube() {
-		for(int i = 0; isCubeIn() && i < 3 ; i++) {
+		for (int i = 0; isCubeIn() && i < 3; i++) {
 			drive(Constants.kCubeWheelSpeed);
-			Timer.delay(0.3);//TODO Figure out minimum time needed to eject Cube
-			//Would be optimal to have encoder on here but that doesn't seem feasible. Time is next best option
+			Timer.delay(0.3);// TODO Figure out minimum time needed to eject
+								// Cube
+			// Would be optimal to have encoder on here but that doesn't seem
+			// feasible. Time is next best option
 		}
 		drive(0);
 	}
