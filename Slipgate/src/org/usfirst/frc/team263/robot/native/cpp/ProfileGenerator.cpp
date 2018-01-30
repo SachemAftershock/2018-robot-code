@@ -42,9 +42,30 @@ ProfileGenerator::ProfileGenerator(double itp, double t1, double t2, double vpro
 	v = vprog;
 }
 
+/**
+	Frees memory from pointers.
+*/
 ProfileGenerator::~ProfileGenerator()
 {
 	free(f2);
+}
+
+/**
+	Generates a full s-curve profile.
+
+	@return A double pointer containing velocity commands, with the first entry being the length of the pointer.
+*/
+double* ProfileGenerator::getProfile()
+{
+	double* prof = (double*)malloc(2 * n * sizeof(double) + 1);
+	
+	prof[0] = 2 * n + 1;
+
+	for (int i = 1; i < 2 * n + 1; i++) {
+		prof[i] = getNextCommand();
+	}
+
+	return prof;
 }
 
 /**
