@@ -2,10 +2,10 @@ package org.usfirst.frc.team263.robot;
 
 public class Constants {
 	// CAN Bus Motor IDs
-	final static int kLeftMasterDrivePort = 0;
-	final static int kLeftSlaveDrivePort = 1;
-	final static int kRightMasterDrivePort = 2;
-	final static int kRightSlaveDrivePort = 3;
+	final static int kLeftMasterDrivePort = 1;
+	final static int kLeftSlaveDrivePort = 0;
+	final static int kRightMasterDrivePort = 3;
+	final static int kRightSlaveDrivePort = 2;
 
 	// PCM Module ID
 	final static int kDriveSolenoidPort = 0;

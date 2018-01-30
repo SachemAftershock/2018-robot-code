@@ -63,7 +63,7 @@ public class SWDrive {
 		// Initialize all master and slave motors.
 		mLeftMaster = new TalonSRX(Constants.kLeftMasterDrivePort);
 		mLeftMaster.setNeutralMode(NeutralMode.Brake);
-		mLeftMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+		mLeftMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 0);
 		mLeftMaster.setSelectedSensorPosition(0, 0, 0);
 		mLeftMaster.setSensorPhase(true);
 		mLeftMaster.setInverted(false);
@@ -75,7 +75,7 @@ public class SWDrive {
 
 		mRightMaster = new TalonSRX(Constants.kRightMasterDrivePort);
 		mRightMaster.setNeutralMode(NeutralMode.Brake);
-		mRightMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+		mRightMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 0);
 		mRightMaster.setSelectedSensorPosition(0, 0, 0);
 		mRightMaster.setInverted(true);
 
@@ -104,6 +104,7 @@ public class SWDrive {
 	 *            x component of open loop control
 	 */
 	public void drive(double leftY, double rightX) {
+		System.out.println("Left: " + mLeftMaster.getSelectedSensorPosition(0) + " | Right: " + mRightMaster.getSelectedSensorPosition(0));
 		synchronized (this) {
 			if (mDriveMode == DriveMode.eOpenLoop) {
 				double leftOutput = deadband(leftY, 0.1)
