@@ -42,6 +42,11 @@ ProfileGenerator::ProfileGenerator(double itp, double t1, double t2, double vpro
 	v = vprog;
 }
 
+ProfileGenerator::~ProfileGenerator()
+{
+	free(f2);
+}
+
 /**
 	Returns the target velocity for the next timestep of the motion profiler.
 */

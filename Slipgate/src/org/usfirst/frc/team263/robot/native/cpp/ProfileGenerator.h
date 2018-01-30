@@ -3,6 +3,7 @@
 class ProfileGenerator {
 public:
 	ProfileGenerator(double itp, double t1, double t2, double vprog, double dist);
+	~ProfileGenerator();
 	double getNextCommand();
 
 private:
