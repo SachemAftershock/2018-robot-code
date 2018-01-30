@@ -69,7 +69,9 @@ double* ProfileGenerator::getProfile()
 }
 
 /**
-	Returns the target velocity for the next timestep of the motion profiler.
+	Returns the target velocity for the next timestep of the motion profiler. Also advances timestep.
+
+	@return Target velocity of profile for next timestep.
 */
 double ProfileGenerator::getNextCommand()
 {
