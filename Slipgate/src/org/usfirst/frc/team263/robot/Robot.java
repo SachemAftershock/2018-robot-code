@@ -1,12 +1,15 @@
 package org.usfirst.frc.team263.robot;
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 
 import java.io.IOException;
 
+import org.usfirst.frc.team263.robot.Enums.AutoObjective;
 import org.usfirst.frc.team263.robot.Enums.Direction;
+import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
@@ -15,6 +18,8 @@ public class Robot extends TimedRobot {
 	SWDrive drive;
 	CubeIntake intake;
 	Logger logger;
+	Autonomous autonomous;
+	Compressor compressor;
 
 	@Override
 	public void robotInit() {
@@ -22,6 +27,9 @@ public class Robot extends TimedRobot {
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
 		drive = SWDrive.getInstance();
+		autonomous = Autonomous.getInstance();
+		compressor = new Compressor();
+
 		try {
 			logger = new Logger();
 		} catch (IOException e) {
@@ -39,16 +47,28 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
-		drive.drive(pDriver);
+		compressor.setClosedLoopControl(true);
 		if (pDriver.getBumper(Hand.kLeft)) {
+			Limelight.setCameraMode(CameraMode.eVision);
 			drive.setCubeAssist(Direction.eCounterclockwise);
 		} else if (pDriver.getBumper(Hand.kRight)) {
+			Limelight.setCameraMode(CameraMode.eVision);
 			drive.setCubeAssist(Direction.eClockwise);
 		} else {
+			Limelight.setCameraMode(CameraMode.eDriver);
 			drive.setOpenLoop();
 		}
+
+		if (pDriver.getAButton()) {
+			drive.setHighGear();
+		}
+		if (pDriver.getXButton()) {
+			drive.setLowGear();
+		}
+
+		drive.drive(pDriver);
 	}
-	
+
 	@Override
 	public void disabledInit() {
 		if (logger != null) {
@@ -61,26 +81,28 @@ public class Robot extends TimedRobot {
 		if (logger != null) {
 			logger.write("Entering Autonomous Mode", true);
 		}
-		drive.setLinearDistance(12);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, 90);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, 180);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, -90);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, 0);
 	}
 
 	@Override
 	public void autonomousPeriodic() {
-		drive.drive(pDriver);
+		autonomous.drive();
 	}
 
 	@Override
 	public void testInit() {
-		drive.setOpenLoop();
+		drive.setLinearDistance(36);
 	}
 
 	@Override
 	public void testPeriodic() {
-		if (pDriver.getAButton()) {
-			drive.setHighGear();
-		}
-		if (pDriver.getXButton()) {
-			drive.setLowGear();
-		}
+		drive.drive(pDriver);
 	}
 }
