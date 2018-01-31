@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.usfirst.frc.team263.robot.Enums.AutoObjective;
+import org.usfirst.frc.team263.robot.Enums.Direction;
 
 public class Autonomous {
 	private static Autonomous mInstance = new Autonomous();
@@ -64,6 +65,11 @@ public class Autonomous {
 			break;
 		case eRotate:
 			if (isFirst) mDrive.setRotationTheta(mSetpoint);
+			mDrive.drive();
+			mIsObjectiveFinished = mDrive.isSetpointReached();
+			break;
+		case eCubeAssist:
+			if (isFirst) mDrive.setCubeAssist(mSetpoint == 0 ? Direction.eClockwise : Direction.eCounterclockwise);
 			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
