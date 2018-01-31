@@ -140,8 +140,8 @@ public class SWDrive {
 				// TODO: add motion profiling to linear movement.
 				// Using PIDF with encoders right now to drive directly to the
 				// setpoints.
-				mLeftMaster.set(ControlMode.Position, mLeftSetpoint);
-				mRightMaster.set(ControlMode.Position, mRightSetpoint);
+				mLeftMaster.set(ControlMode.MotionMagic, mLeftSetpoint);
+				mRightMaster.set(ControlMode.MotionMagic, mRightSetpoint);
 				
 				mIsSetpointReached = (Math.abs(mLeftMaster
 						.getClosedLoopError(0)) <= Constants.kDriveError[mGearingMode.ordinal()])
