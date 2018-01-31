@@ -6,5 +6,5 @@ package org.usfirst.frc.team263.robot.Enums;
  * @author Dan Waxman
  */
 public enum AutoObjective {
-	eNothing, eForward, eCurve, eEjectCube;
+	eNothing, eForward, eCurve, eRotate, eEjectCube;
 }

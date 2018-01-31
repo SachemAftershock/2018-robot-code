@@ -81,7 +81,14 @@ public class Robot extends TimedRobot {
 		if (logger != null) {
 			logger.write("Entering Autonomous Mode", true);
 		}
-		autonomous.queueObjective(AutoObjective.eForward, 12);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, 90);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, 180);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, -90);
+		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eRotate, 0);
 	}
 
 	@Override
@@ -91,19 +98,11 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
-		drive.setOpenLoop();
+		drive.setLinearDistance(36);
 	}
 
 	@Override
 	public void testPeriodic() {
-		if (pDriver.getAButton()) {
-			drive.zeroGyro();
-			drive.setOpenLoop();
-		}
-		if (pDriver.getXButton()) {
-			drive.setRotationTheta(90);
-		}
-
 		drive.drive(pDriver);
 	}
 }

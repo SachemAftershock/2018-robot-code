@@ -65,7 +65,7 @@ public class SWDrive {
 		mLeftMaster.setNeutralMode(NeutralMode.Brake);
 		mLeftMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 0);
 		mLeftMaster.setSelectedSensorPosition(0, 0, 0);
-		mLeftMaster.setSensorPhase(true);
+		mLeftMaster.setSensorPhase(false);
 		mLeftMaster.setInverted(false);
 
 		mLeftSlave = new TalonSRX(Constants.kLeftSlaveDrivePort);
@@ -104,7 +104,6 @@ public class SWDrive {
 	 *            x component of open loop control
 	 */
 	public void drive(double leftY, double rightX) {
-		System.out.println("Left: " + mLeftMaster.getSelectedSensorPosition(0) + " | Right: " + mRightMaster.getSelectedSensorPosition(0));
 		synchronized (this) {
 			if (mDriveMode == DriveMode.eOpenLoop) {
 				double leftOutput = deadband(leftY, 0.1)
@@ -143,10 +142,10 @@ public class SWDrive {
 				// setpoints.
 				mLeftMaster.set(ControlMode.Position, mLeftSetpoint);
 				mRightMaster.set(ControlMode.Position, mRightSetpoint);
-
-				mIsSetpointReached = (mLeftMaster
-						.getClosedLoopError(0) <= Constants.kDriveError[mGearingMode.ordinal()])
-						&& (mRightMaster.getClosedLoopError(0) <= Constants.kDriveError[mGearingMode.ordinal()]);
+				
+				mIsSetpointReached = (Math.abs(mLeftMaster
+						.getClosedLoopError(0)) <= Constants.kDriveError[mGearingMode.ordinal()])
+						&& (Math.abs(mRightMaster.getClosedLoopError(0)) <= Constants.kDriveError[mGearingMode.ordinal()]);
 			} else if (mDriveMode == DriveMode.eCubeAssist) {
 				// TODO: add distance information. This can be done in the
 				// future after we decide on where the Limelight is mounted.
@@ -341,6 +340,7 @@ public class SWDrive {
 		mLeftSetpoint = mLeftMaster.getSelectedSensorPosition(0) + naturalUnitDistance;
 		mRightSetpoint = mRightMaster.getSelectedSensorPosition(0) + naturalUnitDistance;
 		mDriveMode = DriveMode.eLinear;
+		mIsSetpointReached = false;
 	}
 
 	/**

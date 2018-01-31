@@ -23,6 +23,7 @@ public class Autonomous {
 		mIntake = CubeIntake.getInstance();
 		mObjectiveQueue = new LinkedList<AutoObjective>();
 		mSetpointQueue = new LinkedList<Double>();
+		mIsObjectiveFinished = true;
 	}
 
 	/**
@@ -41,9 +42,11 @@ public class Autonomous {
 	 * double)
 	 */
 	public void drive() {
+		boolean isFirst = false;
 		if (!mObjectiveQueue.isEmpty() && mIsObjectiveFinished) {
 			mObjective = mObjectiveQueue.poll();
 			mSetpoint = mSetpointQueue.poll();
+			isFirst = true;
 		}
 
 		switch (mObjective) {
@@ -51,13 +54,18 @@ public class Autonomous {
 			mIsObjectiveFinished = true;
 			break;
 		case eForward:
-			mDrive.setLinearDistance(mSetpoint);
+			if (isFirst) mDrive.setLinearDistance(mSetpoint);
 			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
 		case eEjectCube:
 			mIntake.autonEjectCube();
 			mIsObjectiveFinished = true;
+			break;
+		case eRotate:
+			if (isFirst) mDrive.setRotationTheta(mSetpoint);
+			mDrive.drive();
+			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
 		case eCurve:
 			// TODO: Add curved reverse kinematic expressions after SWDrive
