@@ -48,6 +48,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		compressor.setClosedLoopControl(true);
+		compressor.start();
 		if (pDriver.getBumper(Hand.kLeft)) {
 			Limelight.setCameraMode(CameraMode.eVision);
 			drive.setCubeAssist(Direction.eCounterclockwise);
@@ -81,14 +82,18 @@ public class Robot extends TimedRobot {
 		if (logger != null) {
 			logger.write("Entering Autonomous Mode", true);
 		}
-		autonomous.queueObjective(AutoObjective.eForward, 36);
+		
+		drive.zeroGyro();
+		
+		autonomous.queueObjective(AutoObjective.eForward, 120);
 		autonomous.queueObjective(AutoObjective.eRotate, 90);
-		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eForward, 60);
 		autonomous.queueObjective(AutoObjective.eRotate, 180);
-		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eForward, 120);
 		autonomous.queueObjective(AutoObjective.eRotate, -90);
-		autonomous.queueObjective(AutoObjective.eForward, 36);
+		autonomous.queueObjective(AutoObjective.eForward, 60);
 		autonomous.queueObjective(AutoObjective.eRotate, 0);
+		autonomous.queueObjective(AutoObjective.eCubeAssist, 0);
 	}
 
 	@Override

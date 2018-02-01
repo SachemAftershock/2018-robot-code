@@ -142,10 +142,11 @@ public class SWDrive {
 				// setpoints.
 				mLeftMaster.set(ControlMode.Position, mLeftSetpoint);
 				mRightMaster.set(ControlMode.Position, mRightSetpoint);
-				
-				mIsSetpointReached = (Math.abs(mLeftMaster
-						.getClosedLoopError(0)) <= Constants.kDriveError[mGearingMode.ordinal()])
-						&& (Math.abs(mRightMaster.getClosedLoopError(0)) <= Constants.kDriveError[mGearingMode.ordinal()]);
+
+				mIsSetpointReached = (Math.abs(mLeftMaster.getSelectedSensorPosition(0)
+						- mLeftSetpoint) <= Constants.kDriveError[mGearingMode.ordinal()])
+						&& (Math.abs(mRightMaster.getSelectedSensorPosition(0)
+								- mRightSetpoint) <= Constants.kDriveError[mGearingMode.ordinal()]);
 			} else if (mDriveMode == DriveMode.eCubeAssist) {
 				// TODO: add distance information. This can be done in the
 				// future after we decide on where the Limelight is mounted.
