@@ -25,11 +25,11 @@ public class Constants {
 	final static double kDriveWheelLength = 23.5;
 
 	// Rotational PID Constants
-	final static double[] kDriveRKp = { 0.0025, 0.0028 };
-	final static double[] kDriveRKi = { 0.000, 0.000 };
-	final static double[] kDriveRKd = { 0.01, 0.000 };
+	final static double[] kDriveRKp = { 0.002, 0.00 };
+	final static double[] kDriveRKi = { 0.00, 0.000 };
+	final static double[] kDriveRKd = { 0.04, 0.000 };
 	final static double[] kDriveRKf = { 0.00, 0.00 };
-	final static double[] kDriveRStaticFr = { 0.094, 0.095 };
+	final static double[] kDriveRStaticFr = { 0.090, 0.095 };
 	final static double[] kDriveREpsilon = { 0.5, 0.5 };
 
 	// Cube Intake constants
