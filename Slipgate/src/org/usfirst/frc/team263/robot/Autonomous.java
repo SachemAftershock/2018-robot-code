@@ -25,6 +25,7 @@ public class Autonomous {
 		mObjectiveQueue = new LinkedList<AutoObjective>();
 		mSetpointQueue = new LinkedList<Double>();
 		mIsObjectiveFinished = true;
+		mDrive.zeroGyro();
 	}
 
 	/**
