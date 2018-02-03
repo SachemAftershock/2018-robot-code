@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import org.usfirst.frc.team263.robot.Enums.AutoObjective;
 import org.usfirst.frc.team263.robot.Enums.Direction;
+import org.usfirst.frc.team263.robot.Enums.LEDMode;
 import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 
 import edu.wpi.first.wpilibj.GenericHID.Hand;
@@ -20,7 +21,7 @@ public class Robot extends TimedRobot {
 	Logger logger;
 	Autonomous autonomous;
 	Compressor compressor;
-
+	
 	@Override
 	public void robotInit() {
 		pDriver = new XboxController(0);
@@ -47,6 +48,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
+		LEDStrip.sendColor(LEDMode.eRainbow);
 		compressor.setClosedLoopControl(true);
 		compressor.start();
 		if (pDriver.getBumper(Hand.kLeft)) {
