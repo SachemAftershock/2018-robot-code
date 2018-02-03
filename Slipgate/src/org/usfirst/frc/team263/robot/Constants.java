@@ -45,4 +45,8 @@ public class Constants {
 	// DigitalInputs Port IDs
 	final static int kCubeLeftLimitSwitch = 0;
 	final static int kCubeRightLimitSwitch = 1;
+	
+	//Communication bus constants
+	final static int kArduinoI2CAddress = 10;
+	
 }
