@@ -16,6 +16,7 @@ JNIEXPORT jdoubleArray JNICALL Java_org_usfirst_frc_team263_robot_ProfileGenerat
 	env->SetDoubleArrayRegion(profileJArray, 0, profile[0], profile);
 
 	delete pg;
+	free(profile);
 
 	return profileJArray;
 }
