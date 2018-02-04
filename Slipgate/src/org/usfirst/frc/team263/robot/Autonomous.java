@@ -81,6 +81,14 @@ public class Autonomous {
 			break;
 		}
 	}
+	
+	/**
+	 * Clears the autonomous queue for both objectives and setpoints.
+	 */
+	public void clearQueue() {
+		mObjectiveQueue = new LinkedList<AutoObjective>();
+		mSetpointQueue = new LinkedList<Double>();
+	}
 
 	/**
 	 * Queues an additional autonomous objective segment.
