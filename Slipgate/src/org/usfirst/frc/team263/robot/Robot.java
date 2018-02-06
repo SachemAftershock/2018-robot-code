@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.usfirst.frc.team263.robot.Enums.Direction;
 
@@ -29,6 +30,8 @@ public class Robot extends TimedRobot {
 		} catch (IOException e) {
 			DriverStation.reportError("Couldn't instantiate logger", false);
 		}
+		
+		System.loadLibrary("ProfileGeneratorJNI");
 	}
 
 	@Override
@@ -75,6 +78,12 @@ public class Robot extends TimedRobot {
 	@Override
 	public void testInit() {
 		drive.setOpenLoop();
+		try {
+			double[] x = ProfileGeneratorJNI.createNewProfile(10, 500, 1000, 200, 40000);
+			System.out.println(Arrays.toString(x));
+		} catch (UnsatisfiedLinkError e) {
+			System.err.println(e.getMessage());
+		}
 	}
 
 	@Override
