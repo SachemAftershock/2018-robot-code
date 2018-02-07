@@ -18,19 +18,27 @@ public class Constants {
 	final static double[] kDriveKf = { 0.00, 0.00 };
 	final static int[] kDriveAccel = { 1000, 1000 };
 	final static int[] kDriveCruiseVelocity = { 5000, 5000 };
-	final static int[] kDriveError = { 10, 10 };
+	final static int[] kDriveError = { 100, 10 };
 	final static int[] kDriveIZone = { 200, 200 };
 	final static int[] kDriveRampRate = { 256, 256 };
 	final static double[] kCubeSeekSpeed = { 0.25, 0.45 };
 	final static double kDriveWheelLength = 23.5;
 
 	// Rotational PID Constants
-	final static double[] kDriveRKp = { 0.002, 0.00 };
+	final static double[] kDriveRKp = { 0.005, 0.003 };
 	final static double[] kDriveRKi = { 0.00, 0.000 };
-	final static double[] kDriveRKd = { 0.04, 0.000 };
+	final static double[] kDriveRKd = { 0.04, 0.03 };
 	final static double[] kDriveRKf = { 0.00, 0.00 };
 	final static double[] kDriveRStaticFr = { 0.090, 0.095 };
 	final static double[] kDriveREpsilon = { 0.5, 0.5 };
+	
+	// Curve PID Constants
+	final static double[] kDriveCKp = { 0.005, 0.03 };
+	final static double[] kDriveCKi = { 0.00, 0.000 };
+	final static double[] kDriveCKd = { 0.00, 0.3 };
+	final static double[] kDriveCKf = { 0.00, 0.00 };
+	final static double[] kDriveCStaticFr = { 0.090, 0.095 };
+	final static double[] kDriveCEpsilon = { 0.5, 0.5 };
 
 	// Cube Intake constants
 	final static int kLeftCubeWheel = 4;

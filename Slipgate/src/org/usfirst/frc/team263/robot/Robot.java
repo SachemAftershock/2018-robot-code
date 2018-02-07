@@ -86,16 +86,16 @@ public class Robot extends TimedRobot {
 		}
 		
 		drive.zeroGyro();
+		autonomous.clearQueue();
 		
-		autonomous.queueObjective(AutoObjective.eForward, 120);
+		autonomous.queueObjective(AutoObjective.eForward, 75);
 		autonomous.queueObjective(AutoObjective.eRotate, 90);
-		autonomous.queueObjective(AutoObjective.eForward, 60);
-		autonomous.queueObjective(AutoObjective.eRotate, 180);
 		autonomous.queueObjective(AutoObjective.eForward, 120);
-		autonomous.queueObjective(AutoObjective.eRotate, -90);
-		autonomous.queueObjective(AutoObjective.eForward, 60);
-		autonomous.queueObjective(AutoObjective.eRotate, 0);
-		autonomous.queueObjective(AutoObjective.eCubeAssist, 0);
+		autonomous.queueObjective(AutoObjective.eRotate, 180);
+		autonomous.queueObjective(AutoObjective.eForward, 45);
+		autonomous.queueObjective(AutoObjective.eRotate, 90);
+		autonomous.queueObjective(AutoObjective.eForward, 80);
+		autonomous.queueObjective(AutoObjective.eCubeAssist, 1);
 	}
 
 	@Override
@@ -105,7 +105,8 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
-		drive.setLinearDistance(36);
+		drive.setCurveControl(-20, 90);
+		drive.zeroGyro();
 	}
 
 	@Override

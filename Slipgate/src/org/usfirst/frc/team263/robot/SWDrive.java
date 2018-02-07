@@ -3,6 +3,7 @@ package org.usfirst.frc.team263.robot;
 import org.usfirst.frc.team263.robot.Enums.Direction;
 import org.usfirst.frc.team263.robot.Enums.DriveMode;
 import org.usfirst.frc.team263.robot.Enums.GearingMode;
+import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -195,18 +196,18 @@ public class SWDrive {
 				// If this is the first loop of the PID, the PID must be
 				// initalized.
 				if (mPreviousDriveMode != DriveMode.eCurve || mPreviousGearingMode != mGearingMode) {
-					PidController.initRotationalPid(Constants.kDriveRKp[mGearingMode.ordinal()],
-							Constants.kDriveRKi[mGearingMode.ordinal()], Constants.kDriveRKd[mGearingMode.ordinal()],
-							Constants.kDriveRKf[mGearingMode.ordinal()], mTheta);
+					PidController.initRotationalPid(Constants.kDriveCKp[mGearingMode.ordinal()],
+							Constants.kDriveCKi[mGearingMode.ordinal()], Constants.kDriveCKd[mGearingMode.ordinal()],
+							Constants.kDriveCKf[mGearingMode.ordinal()], mTheta);
 				}
 				double leftOutput = mVelocityRatio * PidController.getPidOutput();
 				double rightOutput = PidController.getPidOutput();
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
-
-				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
-				mRightMaster.set(ControlMode.PercentOutput, output[1]);
+				
+				mLeftMaster.set(ControlMode.PercentOutput, -output[0]);
+				mRightMaster.set(ControlMode.PercentOutput, -output[1]);
 			}
 
 			// Set mode to previous mode for SM purposes.
@@ -328,6 +329,7 @@ public class SWDrive {
 	public void setCubeAssist(Direction direction) {
 		mCubeAssistDirection = direction;
 		mDriveMode = DriveMode.eCubeAssist;
+		Limelight.setCameraMode(CameraMode.eVision);
 	}
 
 	/**
