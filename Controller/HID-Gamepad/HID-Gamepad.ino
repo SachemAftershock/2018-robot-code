@@ -12,10 +12,11 @@ void setup() {
 
 void loop() {
     digitalWrite(pinLed, HIGH);
-    
-    Gamepad.xAxis(((int)Serial1.read()) * (1<<7));
+
+    if (Serial1.available()) {
+      Gamepad.xAxis(((int)Serial1.read()) * (1<<7));
+    }
     Gamepad.write();
     
     digitalWrite(pinLed, LOW);
-    delay(100);
 }

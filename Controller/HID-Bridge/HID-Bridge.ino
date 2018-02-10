@@ -4,5 +4,4 @@ void setup() {
 
 void loop() {
   Serial.write((char) (analogRead(0) / (1<<2)));
-  delay(100);
 }
