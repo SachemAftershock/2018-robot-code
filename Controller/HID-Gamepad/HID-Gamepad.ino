@@ -5,7 +5,7 @@ const int pinLed = LED_BUILTIN;
 void setup() {
   pinMode(pinLed, OUTPUT);
 
-  Serial1.begin(115200);
+  Serial1.begin(2000000);
 
   Gamepad.begin();
 }
