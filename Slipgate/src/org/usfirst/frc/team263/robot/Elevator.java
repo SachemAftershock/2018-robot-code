@@ -121,7 +121,7 @@ public class Elevator {
 			clearEverything();
 		} else if (controller.getStickButton(Hand.kLeft) && !L3Pressed) {
 			executeHead();
-		} else if (deadband(controller.getTriggerAxis(Hand.kRight), 0.5) == 0 && !RTPressed) {
+		} else if (deadband(controller.getTriggerAxis(Hand.kRight), 0.5) == 0 && RTPressed) {
 			targetQueue.add(cumulativeTarget);
 		}
 
