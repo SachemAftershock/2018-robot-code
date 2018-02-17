@@ -191,6 +191,8 @@ public class Elevator {
 
 	/**
 	 * Executes the command at the head of the trajectory queue.
+	 * 
+	 * Not the Maximilien Robespierre style though.
 	 */
 	private void executeHead() {
 		if (trajectoryQueue.size() > 0 && trajectoryQueue.peek().isGenerated()) {
