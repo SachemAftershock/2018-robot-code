@@ -3,6 +3,7 @@ package org.usfirst.frc.team263.robot;
 import org.usfirst.frc.team263.robot.Enums.Direction;
 import org.usfirst.frc.team263.robot.Enums.DriveMode;
 import org.usfirst.frc.team263.robot.Enums.GearingMode;
+import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -29,11 +30,12 @@ public class SWDrive {
 	private TalonSRX mLeftMaster, mLeftSlave, mRightMaster, mRightSlave;
 	private AHRS mNavX;
 	private double mLeftSetpoint, mRightSetpoint;
-	private double mTheta;
+	private double mTheta, mVelocityRatio;
 	private Direction mCubeAssistDirection;
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
 	private Solenoid mSolenoid;
+	private boolean mIsSetpointReached;
 
 	/**
 	 * Gets instance of singleton SWDrive.
@@ -57,13 +59,14 @@ public class SWDrive {
 		mLeftSetpoint = 0;
 		mRightSetpoint = 0;
 		mTheta = 0;
+		mVelocityRatio = 0;
 
 		// Initialize all master and slave motors.
 		mLeftMaster = new TalonSRX(Constants.kLeftMasterDrivePort);
 		mLeftMaster.setNeutralMode(NeutralMode.Brake);
-		mLeftMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+		mLeftMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 0);
 		mLeftMaster.setSelectedSensorPosition(0, 0, 0);
-		mLeftMaster.setSensorPhase(true);
+		mLeftMaster.setSensorPhase(false);
 		mLeftMaster.setInverted(false);
 
 		mLeftSlave = new TalonSRX(Constants.kLeftSlaveDrivePort);
@@ -73,7 +76,7 @@ public class SWDrive {
 
 		mRightMaster = new TalonSRX(Constants.kRightMasterDrivePort);
 		mRightMaster.setNeutralMode(NeutralMode.Brake);
-		mRightMaster.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+		mRightMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 0);
 		mRightMaster.setSelectedSensorPosition(0, 0, 0);
 		mRightMaster.setInverted(true);
 
@@ -87,31 +90,35 @@ public class SWDrive {
 		setLowGear();
 		configureClosedLoop();
 
+		mIsSetpointReached = true;
+
 		// Initialize NavX in MXP port.
 		mNavX = new AHRS(SPI.Port.kMXP);
 	}
 
 	/**
-	 * Method to drive robot given controller of primary driver.
+	 * Drive robot in any DriveMode.
 	 * 
-	 * @param controller
-	 *            Primary driver's controller.
+	 * @param leftY
+	 *            y component of open loop control
+	 * @param rightX
+	 *            x component of open loop control
 	 */
-	public void drive(XboxController controller) {
+	public void drive(double leftY, double rightX) {
 		synchronized (this) {
 			if (mDriveMode == DriveMode.eOpenLoop) {
-				double leftOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
-						+ Constants.kTurningConstant[mGearingMode.ordinal()]
-								* deadband(controller.getX(Hand.kRight), 0.1);
-				double rightOutput = deadband(-controller.getY(Hand.kLeft), 0.1)
-						- Constants.kTurningConstant[mGearingMode.ordinal()]
-								* deadband(controller.getX(Hand.kRight), 0.1);
+				double leftOutput = deadband(leftY, 0.1)
+						+ Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
+				double rightOutput = deadband(leftY, 0.1)
+						- Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
 
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
+
+				mIsSetpointReached = true;
 			} else if (mDriveMode == DriveMode.eRotational) {
 				// If this is the first loop of the PID, the PID must be
 				// initalized.
@@ -128,12 +135,19 @@ public class SWDrive {
 
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
+
+				mIsSetpointReached = PidController.withinEpsilon();
 			} else if (mDriveMode == DriveMode.eLinear) {
 				// TODO: add motion profiling to linear movement.
 				// Using PIDF with encoders right now to drive directly to the
 				// setpoints.
 				mLeftMaster.set(ControlMode.Position, mLeftSetpoint);
 				mRightMaster.set(ControlMode.Position, mRightSetpoint);
+
+				mIsSetpointReached = (Math.abs(mLeftMaster.getSelectedSensorPosition(0)
+						- mLeftSetpoint) <= Constants.kDriveError[mGearingMode.ordinal()])
+						&& (Math.abs(mRightMaster.getSelectedSensorPosition(0)
+								- mRightSetpoint) <= Constants.kDriveError[mGearingMode.ordinal()]);
 			} else if (mDriveMode == DriveMode.eCubeAssist) {
 				// TODO: add distance information. This can be done in the
 				// future after we decide on where the Limelight is mounted.
@@ -151,7 +165,7 @@ public class SWDrive {
 					double leftOutput = 0;
 					double rightOutput = 0;
 
-					if (PidController.withinEpsilon() && Limelight.getTa() < 25) {
+					if (PidController.withinEpsilon() && Limelight.getTa() < 75) {
 						leftOutput = Constants.kCubeSeekSpeed[mGearingMode.ordinal()];
 						rightOutput = Constants.kCubeSeekSpeed[mGearingMode.ordinal()];
 					} else {
@@ -164,11 +178,10 @@ public class SWDrive {
 
 					mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 					mRightMaster.set(ControlMode.PercentOutput, output[1]);
-				} else {
-					if (!ControllerRumble.exists) {
-						(new ControllerRumble(controller, 2)).start();
-					}
 
+					mIsSetpointReached = PidController.withinEpsilon() && Limelight.getTa() >= 75;
+				} else {
+					// TODO: Add back controller feedback here.
 					if (mCubeAssistDirection == Direction.eClockwise) {
 						mLeftMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 						mRightMaster.set(ControlMode.PercentOutput, -Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
@@ -176,7 +189,25 @@ public class SWDrive {
 						mLeftMaster.set(ControlMode.PercentOutput, -Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 						mRightMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 					}
+
+					mIsSetpointReached = false;
 				}
+			} else if (mDriveMode == DriveMode.eCurve) {
+				// If this is the first loop of the PID, the PID must be
+				// initalized.
+				if (mPreviousDriveMode != DriveMode.eCurve || mPreviousGearingMode != mGearingMode) {
+					PidController.initRotationalPid(Constants.kDriveCKp[mGearingMode.ordinal()],
+							Constants.kDriveCKi[mGearingMode.ordinal()], Constants.kDriveCKd[mGearingMode.ordinal()],
+							Constants.kDriveCKf[mGearingMode.ordinal()], mTheta);
+				}
+				double leftOutput = mVelocityRatio * PidController.getPidOutput();
+				double rightOutput = PidController.getPidOutput();
+
+				double[] output = { leftOutput, rightOutput };
+				normalize(output);
+				
+				mLeftMaster.set(ControlMode.PercentOutput, -output[0]);
+				mRightMaster.set(ControlMode.PercentOutput, -output[1]);
 			}
 
 			// Set mode to previous mode for SM purposes.
@@ -186,10 +217,50 @@ public class SWDrive {
 	}
 
 	/**
+	 * Method to drive robot given controller of primary driver.
+	 * 
+	 * @param controller
+	 *            Primary driver's controller.
+	 */
+	public void drive(XboxController controller) {
+		drive(-controller.getY(Hand.kLeft), controller.getX(Hand.kRight));
+	}
+
+	/**
+	 * Drive robot without open loop control.
+	 */
+	public void drive() {
+		drive(0, 0);
+	}
+
+	/**
+	 * Returns information on whether closed loop setpoint is reached.
+	 * 
+	 * @return true if setpoint has been reached, false otherwise.
+	 */
+	public boolean isSetpointReached() {
+		return mIsSetpointReached;
+	}
+
+	/**
 	 * Set driving mode to open loop.
 	 */
 	public void setOpenLoop() {
 		mDriveMode = DriveMode.eOpenLoop;
+	}
+
+	/**
+	 * Sets up curved closed loop control.
+	 * 
+	 * @param r
+	 *            Signed distance to ICC.
+	 * @param theta
+	 *            Angular offset to travel.
+	 */
+	public void setCurveControl(double r, double theta) {
+		mTheta = theta;
+		mVelocityRatio = Kinematics.getVelocityRatio(r, Constants.kDriveWheelLength);
+		mDriveMode = DriveMode.eCurve;
 	}
 
 	/**
@@ -233,7 +304,7 @@ public class SWDrive {
 	 */
 	public void setHighGear() {
 		setGearingMode(GearingMode.eHighGear);
-		}
+	}
 
 	/**
 	 * Sets the drivetrain to a given shift mode.
@@ -258,6 +329,7 @@ public class SWDrive {
 	public void setCubeAssist(Direction direction) {
 		mCubeAssistDirection = direction;
 		mDriveMode = DriveMode.eCubeAssist;
+		Limelight.setCameraMode(CameraMode.eVision);
 	}
 
 	/**
@@ -271,6 +343,7 @@ public class SWDrive {
 		mLeftSetpoint = mLeftMaster.getSelectedSensorPosition(0) + naturalUnitDistance;
 		mRightSetpoint = mRightMaster.getSelectedSensorPosition(0) + naturalUnitDistance;
 		mDriveMode = DriveMode.eLinear;
+		mIsSetpointReached = false;
 	}
 
 	/**

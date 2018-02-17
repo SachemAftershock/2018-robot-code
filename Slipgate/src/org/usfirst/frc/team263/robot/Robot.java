@@ -1,5 +1,6 @@
 package org.usfirst.frc.team263.robot;
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -7,7 +8,10 @@ import edu.wpi.first.wpilibj.XboxController;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.usfirst.frc.team263.robot.Enums.AutoObjective;
 import org.usfirst.frc.team263.robot.Enums.Direction;
+import org.usfirst.frc.team263.robot.Enums.LEDMode;
+import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 
@@ -17,7 +21,9 @@ public class Robot extends TimedRobot {
 	Elevator elevator;
 	CubeIntake intake;
 	Logger logger;
-
+	Autonomous autonomous;
+	Compressor compressor;
+	
 	@Override
 	public void robotInit() {
 		pDriver = new XboxController(0);
@@ -25,6 +31,9 @@ public class Robot extends TimedRobot {
 		intake = CubeIntake.getInstance();
 		drive = SWDrive.getInstance();
 		elevator = Elevator.getInstance();
+		autonomous = Autonomous.getInstance();
+		compressor = new Compressor();
+
 		try {
 			logger = new Logger();
 		} catch (IOException e) {
@@ -44,17 +53,31 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
-		drive.drive(pDriver);
+		LEDStrip.sendColor(LEDMode.eRainbow);
+		compressor.setClosedLoopControl(true);
+		compressor.start();
 		elevator.drive(sDriver);
 		if (pDriver.getBumper(Hand.kLeft)) {
+			Limelight.setCameraMode(CameraMode.eVision);
 			drive.setCubeAssist(Direction.eCounterclockwise);
 		} else if (pDriver.getBumper(Hand.kRight)) {
+			Limelight.setCameraMode(CameraMode.eVision);
 			drive.setCubeAssist(Direction.eClockwise);
 		} else {
+			Limelight.setCameraMode(CameraMode.eDriver);
 			drive.setOpenLoop();
 		}
+
+		if (pDriver.getAButton()) {
+			drive.setHighGear();
+		}
+		if (pDriver.getXButton()) {
+			drive.setLowGear();
+		}
+
+		drive.drive(pDriver);
 	}
-	
+
 	@Override
 	public void disabledInit() {
 		if (logger != null) {
@@ -67,12 +90,23 @@ public class Robot extends TimedRobot {
 		if (logger != null) {
 			logger.write("Entering Autonomous Mode", true);
 		}
-		drive.setLinearDistance(12);
+		
+		drive.zeroGyro();
+		autonomous.clearQueue();
+		
+		autonomous.queueObjective(AutoObjective.eForward, 75);
+		autonomous.queueObjective(AutoObjective.eRotate, 90);
+		autonomous.queueObjective(AutoObjective.eForward, 120);
+		autonomous.queueObjective(AutoObjective.eRotate, 180);
+		autonomous.queueObjective(AutoObjective.eForward, 45);
+		autonomous.queueObjective(AutoObjective.eRotate, 90);
+		autonomous.queueObjective(AutoObjective.eForward, 80);
+		autonomous.queueObjective(AutoObjective.eCubeAssist, 1);
 	}
 
 	@Override
 	public void autonomousPeriodic() {
-		drive.drive(pDriver);
+		autonomous.drive();
 	}
 
 	@Override
@@ -88,11 +122,6 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testPeriodic() {
-		if (pDriver.getAButton()) {
-			drive.setHighGear();
-		}
-		if (pDriver.getXButton()) {
-			drive.setLowGear();
-		}
+		drive.drive(pDriver);
 	}
 }
