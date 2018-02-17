@@ -181,7 +181,7 @@ public class Elevator {
 		shouldStream = true;
 		streamerThread.start();
 	}
-	
+
 	/**
 	 * @return If a motion profile is currently running.
 	 */
@@ -316,8 +316,9 @@ public class Elevator {
 				int targetPos = encoderLevels[targetLevel];
 				int currentPos = encoderLevels[prevLevel];
 				ElevatorProfile prof = new ElevatorProfile();
-				// TODO: add automatic profile generation, will work out kinematics tomorrow
-				prof.setGenerated(new double[] { 0.0, 1.0, 2.0 }, targetLevel, prevLevel);
+				double[] targetVelocities = ProfileGeneratorJNI.createNewProfile(Constants.kItp, Constants.kT1,
+						Constants.kT2, Constants.kVprog, targetPos - currentPos);
+				prof.setGenerated(targetVelocities, targetLevel, prevLevel);
 				trajectoryQueue.add(prof);
 				prevLevel = targetLevel;
 			}

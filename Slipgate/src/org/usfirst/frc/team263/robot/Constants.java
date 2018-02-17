@@ -31,7 +31,7 @@ public class Constants {
 	final static double[] kDriveRKf = { 0.00, 0.00 };
 	final static double[] kDriveRStaticFr = { 0.090, 0.095 };
 	final static double[] kDriveREpsilon = { 0.5, 0.5 };
-	
+
 	// Curve PID Constants
 	final static double[] kDriveCKp = { 0.005, 0.03 };
 	final static double[] kDriveCKi = { 0.00, 0.000 };
@@ -53,14 +53,14 @@ public class Constants {
 	// DigitalInputs Port IDs
 	final static int kCubeLeftLimitSwitch = 0;
 	final static int kCubeRightLimitSwitch = 1;
-	
-	//Communication bus constants
+
+	// Communication bus constants
 	final static int kArduinoI2CAddress = 10;
-	
+
 	final static int kElevatorTopLimitSwitch = 2;
 	final static int kElevatorBottomLimitSwitch = 3;
-	
-	//Elevator Constants
+
+	// Elevator Constants
 	final static double kElevatorKp = 0.0;
 	final static double kElevatorKi = 0.0;
 	final static double kElevatorKd = 0.0;
@@ -69,5 +69,8 @@ public class Constants {
 	final static int kMaxVel = 0;
 	final static int kUnitsPerRotation = 4096;
 	final static int kMinBufferSize = 10;
-	
+	final static int kItp = 10;
+	final static int kT1 = 200;
+	final static int kT2 = 100;
+	final static int kVprog = 3000;
 }
