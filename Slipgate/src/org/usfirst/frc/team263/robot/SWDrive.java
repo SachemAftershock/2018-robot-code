@@ -9,6 +9,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.XboxController;
@@ -27,7 +28,8 @@ public class SWDrive {
 	private DriveMode mDriveMode;
 	private DriveMode mPreviousDriveMode;
 	private static SWDrive mInstance = new SWDrive();
-	private TalonSRX mLeftMaster, mLeftSlave, mRightMaster, mRightSlave;
+	private TalonSRX mLeftMaster, mRightMaster;
+	private VictorSPX mLeftSlave, mRightSlave;
 	private AHRS mNavX;
 	private double mLeftSetpoint, mRightSetpoint;
 	private double mTheta, mVelocityRatio;
@@ -69,7 +71,7 @@ public class SWDrive {
 		mLeftMaster.setSensorPhase(false);
 		mLeftMaster.setInverted(false);
 
-		mLeftSlave = new TalonSRX(Constants.kLeftSlaveDrivePort);
+		mLeftSlave = new VictorSPX(Constants.kLeftSlaveDrivePort);
 		mLeftSlave.setInverted(false);
 		mLeftSlave.setNeutralMode(NeutralMode.Brake);
 		mLeftSlave.follow(mLeftMaster);
@@ -80,7 +82,7 @@ public class SWDrive {
 		mRightMaster.setSelectedSensorPosition(0, 0, 0);
 		mRightMaster.setInverted(true);
 
-		mRightSlave = new TalonSRX(Constants.kRightSlaveDrivePort);
+		mRightSlave = new VictorSPX(Constants.kRightSlaveDrivePort);
 		mRightSlave.setInverted(true);
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
