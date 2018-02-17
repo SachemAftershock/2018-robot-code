@@ -1,5 +1,7 @@
 package org.usfirst.frc.team263.robot;
 
+import java.util.List;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -11,9 +13,9 @@ public class Autonomous {
 	private SWDrive mDrive;
 	private CubeIntake mIntake;
 	private Queue<AutoObjective> mObjectiveQueue;
-	private Queue<Double> mSetpointQueue;
+	private Queue<List<Double>> mSetpointQueue;
 	private AutoObjective mObjective;
-	private double mSetpoint;
+	private List<Double> mSetpoint;
 	private boolean mIsObjectiveFinished;
 
 	/**
@@ -23,7 +25,7 @@ public class Autonomous {
 		mDrive = SWDrive.getInstance();
 		mIntake = CubeIntake.getInstance();
 		mObjectiveQueue = new LinkedList<AutoObjective>();
-		mSetpointQueue = new LinkedList<Double>();
+		mSetpointQueue = new LinkedList<List<Double>>();
 		mIsObjectiveFinished = true;
 		mDrive.zeroGyro();
 	}
@@ -56,7 +58,7 @@ public class Autonomous {
 			mIsObjectiveFinished = true;
 			break;
 		case eForward:
-			if (isFirst) mDrive.setLinearDistance(mSetpoint);
+			if (isFirst) mDrive.setLinearDistance(mSetpoint.get(0));
 			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
@@ -65,12 +67,12 @@ public class Autonomous {
 			mIsObjectiveFinished = true;
 			break;
 		case eRotate:
-			if (isFirst) mDrive.setRotationTheta(mSetpoint);
+			if (isFirst) mDrive.setRotationTheta(mSetpoint.get(0));
 			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
 		case eCubeAssist:
-			if (isFirst) mDrive.setCubeAssist(mSetpoint == 0 ? Direction.eClockwise : Direction.eCounterclockwise);
+			if (isFirst) mDrive.setCubeAssist(mSetpoint.get(0) == 0 ? Direction.eClockwise : Direction.eCounterclockwise);
 			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
@@ -87,7 +89,7 @@ public class Autonomous {
 	 */
 	public void clearQueue() {
 		mObjectiveQueue = new LinkedList<AutoObjective>();
-		mSetpointQueue = new LinkedList<Double>();
+		mSetpointQueue = new LinkedList<List<Double>>();
 	}
 
 	/**
@@ -103,8 +105,26 @@ public class Autonomous {
 	 * @param setpoint
 	 *            Setpoint for given objective.
 	 */
-	public void queueObjective(AutoObjective objective, double setpoint) {
+	public void queueObjective(AutoObjective objective, List<Double> setpoint) {
 		mObjectiveQueue.add(objective);
 		mSetpointQueue.add(setpoint);
+	}
+	
+	/**
+	 * Queues an additional autonomous objective segment.
+	 * 
+	 * Currently supported objectives and setpoint pairs:
+	 * - eForward: distance in inches.
+	 * - eNothing: any valid double value.
+	 * - eEjectCube: any valid double value.
+	 * 
+	 * @param objective
+	 *            Objective to queue.
+	 * @param setpoint
+	 *            Setpoint for given objective.
+	 */
+	public void queueObjective(AutoObjective objective, double setpoint) {
+		mObjectiveQueue.add(objective);
+		mSetpointQueue.add(Arrays.asList(setpoint));
 	}
 }
