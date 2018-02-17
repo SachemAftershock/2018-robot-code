@@ -12,6 +12,7 @@ public class Autonomous {
 	private static Autonomous mInstance = new Autonomous();
 	private SWDrive mDrive;
 	private CubeIntake mIntake;
+	private Elevator mElevator;
 	private Queue<AutoObjective> mObjectiveQueue;
 	private Queue<List<Double>> mSetpointQueue;
 	private AutoObjective mObjective;
@@ -24,6 +25,7 @@ public class Autonomous {
 	private Autonomous() {
 		mDrive = SWDrive.getInstance();
 		mIntake = CubeIntake.getInstance();
+		mElevator = Elevator.getInstance();
 		mObjectiveQueue = new LinkedList<AutoObjective>();
 		mSetpointQueue = new LinkedList<List<Double>>();
 		mIsObjectiveFinished = true;
@@ -80,6 +82,10 @@ public class Autonomous {
 			// TODO: Add curved reverse kinematic expressions after SWDrive
 			// matures the feature.
 			mIsObjectiveFinished = true;
+			break;
+		case eElevatorLevel:
+			if (isFirst) mElevator.toCustom(mSetpoint.get(0).intValue());	
+			mIsObjectiveFinished = mElevator.isFinished();
 			break;
 		}
 	}

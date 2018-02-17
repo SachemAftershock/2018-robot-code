@@ -181,6 +181,13 @@ public class Elevator {
 		shouldStream = true;
 		streamerThread.start();
 	}
+	
+	/**
+	 * @return If a motion profile is currently running.
+	 */
+	public boolean isFinished() {
+		return !profileRunning && trajectoryQueue.size() == 0;
+	}
 
 	/**
 	 * Executes the command at the head of the trajectory queue.
