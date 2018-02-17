@@ -99,8 +99,8 @@ public class ElevatorProfile {
 			mElevatorTalon.clearMotionProfileTrajectories();
 			mElevatorTalon.configMotionProfileTrajectoryPeriod(0, 0);
 			for (int x = 0; x < trajectories.length; x++) {
-				point.position = trajectories[0] * Constants.kUnitsPerRotation;
-				point.velocity = trajectories[1] * Constants.kUnitsPerRotation;
+				point.position = trajectories[0] * Constants.kElevatorUnitsPerRotation;
+				point.velocity = trajectories[1] * Constants.kElevatorUnitsPerRotation;
 				point.timeDur = TrajectoryDuration.Trajectory_Duration_10ms.valueOf((int) trajectories[2]);
 				point.profileSlotSelect0 = 0;
 
