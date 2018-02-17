@@ -5,7 +5,7 @@ int OVERRIDE = 0;
 void setup() {
   pinMode(RELAY_ONE_OUT  , OUTPUT       );
   pinMode(RELAY_THREE_OUT, OUTPUT       );
-  pinMode(OVERRIDE,        INPUT_PULLUP );
+  pinMode(OVERRIDE,        INPUT );
 }
 
 void loop() {
