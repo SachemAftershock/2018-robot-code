@@ -87,6 +87,12 @@ public class Autonomous {
 			if (isFirst) mElevator.toCustom(mSetpoint.get(0).intValue());	
 			mIsObjectiveFinished = mElevator.isFinished();
 			break;
+		case eDriveAndElevator:
+			if (isFirst) {
+				mElevator.toCustom(mSetpoint.get(0).intValue());
+				mDrive.setLinearDistance(mSetpoint.get(1));
+			}
+			mIsObjectiveFinished = mDrive.isSetpointReached() && mElevator.isFinished();
 		}
 	}
 	
