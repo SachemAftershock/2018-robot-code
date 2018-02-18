@@ -10,6 +10,7 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.XboxController;
@@ -35,7 +36,8 @@ public class Elevator {
 	private int[] encoderLevels;
 	private ConcurrentLinkedQueue<Integer> targetQueue;
 	private ConcurrentLinkedQueue<ElevatorProfile> trajectoryQueue;
-
+	private DigitalOutput override;
+	
 	/**
 	 * Constructor for Elevator class.
 	 */
@@ -74,6 +76,8 @@ public class Elevator {
 		profileReady = false;
 		profileRunning = false;
 		shouldStream = false;
+		
+		override = new DigitalOutput(Constants.kOverride);
 
 		clearEverything();
 	}
@@ -118,6 +122,10 @@ public class Elevator {
 			executeHead();
 		} else if (deadband(controller.getTriggerAxis(Hand.kRight), 0.5) == 0 && RTPressed) {
 			targetQueue.add(cumulativeTarget);
+		}
+		
+		if (controller.getStartButton()) {
+			override.set(true);
 		}
 
 		talonCheck();
