@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.RobotController;
 
 public class Robot extends TimedRobot {
 	XboxController pDriver, sDriver;
+	Elevator elevator;
 	SWDrive drive;
 	CubeIntake intake;
 	Logger logger;
@@ -28,6 +29,7 @@ public class Robot extends TimedRobot {
 		pDriver = new XboxController(0);
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
+		elevator = Elevator.getInstance();
 		drive = SWDrive.getInstance();
 		autonomous = Autonomous.getInstance();
 		compressor = new Compressor();
@@ -77,6 +79,7 @@ public class Robot extends TimedRobot {
 		}
 
 		drive.drive(pDriver);
+		elevator.drive(sDriver);
 	}
 
 	@Override
