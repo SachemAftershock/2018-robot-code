@@ -199,7 +199,7 @@ public class Elevator {
 				public void run() {
 					profileRunning = (!atTarget() && profileReady);
 				}
-			}).startSingle(0.05); // TODO: TUNE THIS VALUE 
+			}).startSingle(0.05); // TODO: TUNE THIS VALUE
 		}
 	}
 
@@ -209,6 +209,8 @@ public class Elevator {
 	 */
 	private void talonCheck() {
 		synchronized (this) {
+
+			currentCount = mElevatorTalon.getSelectedSensorPosition(0);
 			mElevatorTalon.getMotionProfileStatus(profileStatus);
 
 			if (profileStatus.hasUnderrun) {
@@ -230,7 +232,13 @@ public class Elevator {
 				mElevatorTalon.set(ControlMode.MotionProfile, SetValueMotionProfile.Enable.value);
 			}
 
-			currentCount = mElevatorTalon.getSelectedSensorPosition(0);
+			if (getDelta(elevatorLevel) > Constants.kElevatorThreshhold) {
+				for (ElevatorPosition el : ElevatorPosition.values()) {
+					if (getDelta(el) < Constants.kElevatorThreshhold) {
+						elevatorLevel = el;
+					}
+				}
+			}
 
 			/*
 			 * TODO: add data streamer that sends interpretable info to driver station,
@@ -270,8 +278,21 @@ public class Elevator {
 	 * @return whether or not elevator is at target
 	 */
 	private boolean atTarget() {
-		return elevatorLevel == targetLevel
-				&& Math.abs(currentCount - encoderLevels[elevatorLevel.ordinal()]) < Constants.kElevatorThreshhold;
+		return elevatorLevel == targetLevel && getDelta(elevatorLevel) < Constants.kElevatorThreshhold;
+	}
+
+	/**
+	 * Gets distance between given elevator position and actual elevator position in
+	 * natural units
+	 * 
+	 * @param position
+	 *            elevator position to find delta
+	 * 
+	 * @return Gets distance between assumed elevator position and actual elevator
+	 *         position in natural units
+	 */
+	private int getDelta(ElevatorPosition position) {
+		return Math.abs(currentCount - encoderLevels[position.ordinal()]);
 	}
 
 	/**
@@ -316,8 +337,7 @@ public class Elevator {
 		 */
 		public void run() {
 			synchronized (this) {
-				if (target != targetLevel || 
-						Math.abs(currentCount - encoderLevels[elevatorLevel.ordinal()]) < Constants.kElevatorThreshhold) {
+				if (target != targetLevel || getDelta(elevatorLevel) < Constants.kElevatorThreshhold) {
 					clearEverything();
 					target = targetLevel;
 					double[] jniTargets = ProfileGeneratorJNI.createNewProfile(Constants.kItp, Constants.kT1,
