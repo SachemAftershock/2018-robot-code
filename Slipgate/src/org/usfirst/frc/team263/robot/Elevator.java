@@ -56,8 +56,10 @@ public class Elevator {
 		mElevatorTalon.config_kD(0, Constants.kElevatorKd, 0);
 		mElevatorTalon.config_kF(0, Constants.kElevatorKf, 0);
 		mElevatorTalon.setSelectedSensorPosition(Constants.kInitialCount, 0, 0);
-		mElevatorTalon.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyClosed, 0);
-		mElevatorTalon.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyClosed, 0);
+		mElevatorTalon.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
+				LimitSwitchNormal.NormallyClosed, 0);
+		mElevatorTalon.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
+				LimitSwitchNormal.NormallyClosed, 0);
 		profileStatus = new MotionProfileStatus();
 
 		// buffer and stream processor threads
@@ -72,7 +74,8 @@ public class Elevator {
 		targetLevel = ElevatorPosition.kInitial;
 		elevatorLevel = ElevatorPosition.kInitial;
 
-		// TODO: replace with actual values taken from open-loop control on elevator
+		// TODO: replace with actual values taken from open-loop control on
+		// elevator
 		encoderLevels = new int[] { -1, 118, 254, 263, 353, 1156 };
 		currentCount = Constants.kInitialCount;
 
@@ -131,7 +134,7 @@ public class Elevator {
 			override.set(true);
 			LEDStrip.sendColor(LEDMode.eOverrideToggle);
 		}
-		
+
 		if (mElevatorTalon.getSensorCollection().isRevLimitSwitchClosed()) {
 			mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
 		}
@@ -241,8 +244,8 @@ public class Elevator {
 			}
 
 			/*
-			 * TODO: add data streamer that sends interpretable info to driver station,
-			 * either with ShuffleBoard, SmartDashboard, or UDP Sockets
+			 * TODO: add data streamer that sends interpretable info to driver
+			 * station, either with ShuffleBoard, SmartDashboard, or UDP Sockets
 			 */
 		}
 	}
@@ -313,8 +316,8 @@ public class Elevator {
 	}
 
 	/**
-	 * Runnable used to take queued commands and convert them to trapezoidal motion
-	 * profile trajectory points.
+	 * Runnable used to take queued commands and convert them to trapezoidal
+	 * motion profile trajectory points.
 	 * 
 	 * @author Rohan Bapat
 	 * 
@@ -331,9 +334,9 @@ public class Elevator {
 		}
 
 		/**
-		 * Thread-body that runs every 5 milliseconds; checks if it needs to generate
-		 * new trajectory points to be streamed and then streams enough points such that
-		 * it is 250ms ahead of the TalonSRX.
+		 * Thread-body that runs every 5 milliseconds; checks if it needs to
+		 * generate new trajectory points to be streamed and then streams enough
+		 * points such that it is 250ms ahead of the TalonSRX.
 		 */
 		public void run() {
 			synchronized (this) {
@@ -341,7 +344,8 @@ public class Elevator {
 					clearEverything();
 					target = targetLevel;
 					double[] jniTargets = ProfileGeneratorJNI.createNewProfile(Constants.kItp, Constants.kT1,
-							Constants.kT2, Constants.kVprog, (encoderLevels[targetLevel.ordinal()] - currentCount) / (Constants.kElevatorUnitsPerRotation * Constants.kElevatorRotationsPerInch));
+							Constants.kT2, Constants.kVprog, (encoderLevels[targetLevel.ordinal()] - currentCount)
+									/ (Constants.kElevatorUnitsPerRotation * Constants.kElevatorRotationsPerInch));
 					double[] targetVelocities = Arrays.copyOfRange(jniTargets, 1, jniTargets.length);
 					prof.setGenerated(targetVelocities, mElevatorTalon.getSelectedSensorPosition(0));
 					bufferProcessor.startPeriodic(0.005);

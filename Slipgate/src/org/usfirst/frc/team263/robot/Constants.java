@@ -73,7 +73,7 @@ public class Constants {
 	final static double kItp = 10;
 	final static double kT1 = 200;
 	final static double kT2 = 100;
-	final static double kVprog = 3000;
+	final static double kVprog = 10;
 	final static int kOverride = 4;
 	final static int kElevatorTalon = 4;
 	final static double kMinimumVelocityInPercentThatOvercomesMotorInertia = 0.10;
