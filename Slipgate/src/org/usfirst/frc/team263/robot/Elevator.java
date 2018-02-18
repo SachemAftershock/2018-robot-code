@@ -1,5 +1,7 @@
 package org.usfirst.frc.team263.robot;
 
+import java.util.Arrays;
+
 import org.usfirst.frc.team263.robot.Enums.ElevatorPosition;
 import org.usfirst.frc.team263.robot.Enums.LEDMode;
 
@@ -51,7 +53,7 @@ public class Elevator {
 		mElevatorTalon.config_kI(0, Constants.kElevatorKi, 0);
 		mElevatorTalon.config_kD(0, Constants.kElevatorKd, 0);
 		mElevatorTalon.config_kF(0, Constants.kElevatorKf, 0);
-		mElevatorTalon.setSelectedSensorPosition(0, Constants.kInitialCount, 0); // TODO: CHECK DOCUMENTATION
+		mElevatorTalon.setSelectedSensorPosition(Constants.kInitialCount, 0, 0);
 		profileStatus = new MotionProfileStatus();
 
 		// buffer and stream processor threads
@@ -310,9 +312,10 @@ public class Elevator {
 						Math.abs(currentCount - encoderLevels[elevatorLevel.ordinal()]) < Constants.kElevatorThreshhold) {
 					clearEverything();
 					target = targetLevel;
-					double[] targetVelocities = ProfileGeneratorJNI.createNewProfile(Constants.kItp, Constants.kT1,
+					double[] jniTargets = ProfileGeneratorJNI.createNewProfile(Constants.kItp, Constants.kT1,
 							Constants.kT2, Constants.kVprog, encoderLevels[targetLevel.ordinal()] - currentCount);
-					prof.setGenerated(targetVelocities);
+					double[] targetVelocities = Arrays.copyOfRange(jniTargets, 1, jniTargets.length);
+					prof.setGenerated(targetVelocities, mElevatorTalon.getSelectedSensorPosition(0));
 					bufferProcessor.startPeriodic(0.005);
 					LEDStrip.sendColor(LEDMode.eProfileReady);
 				}

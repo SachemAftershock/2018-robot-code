@@ -13,6 +13,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
  */
 public class ElevatorProfile {
 	private double[] trajectories;
+	private double position;
 	private int numTrajectories, index;
 	private boolean isGenerated;
 
@@ -44,10 +45,11 @@ public class ElevatorProfile {
 	 * @param initial
 	 *            initial level of elevator.
 	 */
-	public void setGenerated(double[] trajectories) {
+	public void setGenerated(double[] trajectories, double currentPosition) {
 		this.trajectories = trajectories;
 		numTrajectories = trajectories.length;
 		isGenerated = true;
+		position = currentPosition;
 	}
 
 	/**
@@ -81,15 +83,18 @@ public class ElevatorProfile {
 				amount = trajectories.length - index;
 				
 			for (int x = index; x < index + amount; x++) {
-				point.position = trajectories[0] * Constants.kElevatorUnitsPerRotation;
-				point.velocity = trajectories[1] * Constants.kElevatorUnitsPerRotation;
-				point.timeDur = TrajectoryDuration.Trajectory_Duration_10ms.valueOf((int) trajectories[2]);
+				if (x != 0) {
+					position += (trajectories[x-1] + trajectories[x]) / 2 * 0.01;
+				}
+				point.position = position;
+				point.velocity = trajectories[x];
+				point.timeDur = TrajectoryDuration.Trajectory_Duration_10ms;
 				point.profileSlotSelect0 = 0;
 
 				point.headingDeg = 0;
 				point.profileSlotSelect1 = 0;
 
-				point.zeroPos = (x == 0);
+				point.zeroPos = false;
 				point.isLastPoint = (x == trajectories.length - 1);
 
 				mElevatorTalon.pushMotionProfileTrajectory(point);
