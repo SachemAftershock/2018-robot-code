@@ -25,7 +25,6 @@ public class Elevator {
 
 	private static Elevator instance = new Elevator();
 	private MotionProfileStatus profileStatus;
-	private DigitalInput topSwitch, bottomSwitch;
 	private TalonSRX mElevatorTalon;
 	private boolean upPressed, downPressed, L3Pressed, RTPressed;
 	private boolean profileReady, profileRunning, shouldStream;
@@ -51,10 +50,6 @@ public class Elevator {
 		mElevatorTalon.config_kD(0, Constants.kElevatorKd, 0);
 		mElevatorTalon.config_kF(0, Constants.kElevatorKf, 0);
 		profileStatus = new MotionProfileStatus();
-
-		// Limit Switches for upper and lower bounds of elevator
-		topSwitch = new DigitalInput(Constants.kElevatorTopLimitSwitch);
-		bottomSwitch = new DigitalInput(Constants.kElevatorBottomLimitSwitch);
 
 		// buffer and trajectory processor threads
 		bufferProcessor = new Notifier(new BufferProcessor());
@@ -102,7 +97,7 @@ public class Elevator {
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0) {
 			clearEverything();
 			mElevatorTalon.set(ControlMode.PercentOutput, deadband(controller.getY(Hand.kLeft), 0.1));
-		} else if (controller.getAButton() && !upPressed && !topSwitch.get()) {
+		} else if (controller.getAButton() && !upPressed) {
 			if (deadband(controller.getTriggerAxis(Hand.kRight), 0.5) != 0) {
 				cumulativeTarget = Math.min(cumulativeTarget + 1, encoderLevels.length - 1);
 			} else {
@@ -110,7 +105,7 @@ public class Elevator {
 				pingStreamer();
 			}
 
-		} else if (controller.getBButton() && !downPressed && !bottomSwitch.get()) {
+		} else if (controller.getBButton() && !downPressed) {
 			if (deadband(controller.getTriggerAxis(Hand.kRight), 0.5) != 0) {
 				cumulativeTarget = Math.max(cumulativeTarget - 1, 0);
 			} else {
