@@ -321,7 +321,7 @@ public class Elevator {
 					clearEverything();
 					target = targetLevel;
 					double[] jniTargets = ProfileGeneratorJNI.createNewProfile(Constants.kItp, Constants.kT1,
-							Constants.kT2, Constants.kVprog, encoderLevels[targetLevel.ordinal()] - currentCount);
+							Constants.kT2, Constants.kVprog, (encoderLevels[targetLevel.ordinal()] - currentCount) / (Constants.kElevatorUnitsPerRotation * Constants.kElevatorRotationsPerInch));
 					double[] targetVelocities = Arrays.copyOfRange(jniTargets, 1, jniTargets.length);
 					prof.setGenerated(targetVelocities, mElevatorTalon.getSelectedSensorPosition(0));
 					bufferProcessor.startPeriodic(0.005);
