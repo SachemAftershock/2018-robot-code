@@ -7,6 +7,7 @@ import java.util.Queue;
 
 import org.usfirst.frc.team263.robot.Enums.AutoObjective;
 import org.usfirst.frc.team263.robot.Enums.Direction;
+import org.usfirst.frc.team263.robot.Enums.ElevatorPosition;
 
 public class Autonomous {
 	private static Autonomous mInstance = new Autonomous();
@@ -84,12 +85,12 @@ public class Autonomous {
 			mIsObjectiveFinished = true;
 			break;
 		case eElevatorLevel:
-			if (isFirst) mElevator.toCustom(mSetpoint.get(0).intValue());	
+			if (isFirst) mElevator.toPosition(ElevatorPosition.values()[mSetpoint.get(0).intValue()]);	
 			mIsObjectiveFinished = mElevator.isFinished();
 			break;
 		case eDriveAndElevator:
 			if (isFirst) {
-				mElevator.toCustom(mSetpoint.get(0).intValue());
+				mElevator.toPosition(ElevatorPosition.values()[mSetpoint.get(0).intValue()]);
 				mDrive.setLinearDistance(mSetpoint.get(1));
 			}
 			mIsObjectiveFinished = mDrive.isSetpointReached() && mElevator.isFinished();
