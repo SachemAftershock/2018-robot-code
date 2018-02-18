@@ -13,18 +13,14 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
  */
 public class ElevatorProfile {
 	private double[] trajectories;
-	private int numTrajectories, initialLevel, targetLevel;
+	private int numTrajectories, index;
 	private boolean isGenerated;
 
 	/**
 	 * Constructor that defaults everything to zero.
 	 */
 	public ElevatorProfile() {
-		trajectories = new double[0];
-		numTrajectories = 0;
-		targetLevel = 0;
-		initialLevel = 0;
-		isGenerated = false;
+		reset();
 	}
 
 	/**
@@ -48,10 +44,8 @@ public class ElevatorProfile {
 	 * @param initial
 	 *            initial level of elevator.
 	 */
-	public void setGenerated(double[] trajectories, int target, int initial) {
+	public void setGenerated(double[] trajectories) {
 		this.trajectories = trajectories;
-		targetLevel = target;
-		initialLevel = initial;
 		numTrajectories = trajectories.length;
 		isGenerated = true;
 	}
@@ -64,41 +58,29 @@ public class ElevatorProfile {
 	public boolean isGenerated() {
 		return isGenerated;
 	}
-
-	/**
-	 * Getter for targetLevel.
-	 * 
-	 * @return target level of profile/elevator.
-	 */
-	public int getTargetLevel() {
-		return targetLevel;
-	}
-
-	/**
-	 * Getter for initialLevel.
-	 * 
-	 * @return initialLevel of profile/elevator.
-	 */
-	public int getInitialLevel() {
-		return initialLevel;
-	}
-
+	
 	/**
 	 * Parses data from trajectory array to trajectory points and pushes them to
 	 * TalonSRX's top level buffer.
 	 * 
 	 * @param mElevatorTalon
 	 *            TalonSRX to push to.
+	 * @param amount
+	 * 			  amount of points to stream to talon.
+	 * 
 	 * @return elevator level that elevator will move to.
 	 */
-	public int pushBuffer(TalonSRX mElevatorTalon) {
+	public void pushBuffer(TalonSRX mElevatorTalon, int amount) {
 		if (!isGenerated) {
-			return -1;
+			return;
 		} else {
 			TrajectoryPoint point = new TrajectoryPoint();
 			mElevatorTalon.clearMotionProfileTrajectories();
 			mElevatorTalon.configMotionProfileTrajectoryPeriod(0, 0);
-			for (int x = 0; x < trajectories.length; x++) {
+			if(index + amount > trajectories.length)
+				amount = trajectories.length - index;
+				
+			for (int x = index; x < index + amount; x++) {
 				point.position = trajectories[0] * Constants.kElevatorUnitsPerRotation;
 				point.velocity = trajectories[1] * Constants.kElevatorUnitsPerRotation;
 				point.timeDur = TrajectoryDuration.Trajectory_Duration_10ms.valueOf((int) trajectories[2]);
@@ -113,8 +95,14 @@ public class ElevatorProfile {
 				mElevatorTalon.pushMotionProfileTrajectory(point);
 
 			}
-			return targetLevel;
 		}
+	}
+	
+	public void reset() {
+		trajectories = new double[0];
+		numTrajectories = 0;
+		index = 0;
+		isGenerated = false;
 	}
 
 }

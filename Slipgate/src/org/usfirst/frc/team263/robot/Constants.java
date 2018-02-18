@@ -57,9 +57,6 @@ public class Constants {
 	// Communication bus constants
 	final static int kArduinoI2CAddress = 10;
 
-	final static int kElevatorTopLimitSwitch = 2;
-	final static int kElevatorBottomLimitSwitch = 3;
-
 	// Elevator Constants
 	final static double kElevatorKp = 0.0;
 	final static double kElevatorKi = 0.0;
@@ -70,13 +67,13 @@ public class Constants {
 	final static int kElevatorUnitsPerRotation = 5120;
 	final static double kDistancePerRotationInches = 5.5;
 	final static double kElevatorRotationsPerInch = kElevatorUnitsPerRotation / kDistancePerRotationInches;
+	final static int kElevatorThreshhold = 10;
+	final static int kInitialCount = 0;
 	final static int kMinBufferSize = 10;
-	final static int kItp = 10;
-	final static int kT1 = 200;
-	final static int kT2 = 100;
-	final static int kVprog = 3000;
+	final static double kItp = 10;
+	final static double kT1 = 200;
+	final static double kT2 = 100;
+	final static double kVprog = 3000;
 	final static int kOverride = 4;
-
-	// Elevator Constants
 	final static int kElevatorTalon = 4;
 }
