@@ -56,5 +56,7 @@ public class Constants {
 	
 	//Communication bus constants
 	final static int kArduinoI2CAddress = 10;
-	
+
+	// Elevator Constants
+	final static int kElevatorTalon = 4;
 }
