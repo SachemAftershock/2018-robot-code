@@ -20,7 +20,6 @@ public class Robot extends TimedRobot {
 	XboxController pDriver, sDriver;
 	Elevator elevator;
 	SWDrive drive;
-	Elevator elevator;
 	CubeIntake intake;
 	Logger logger;
 	Autonomous autonomous;
