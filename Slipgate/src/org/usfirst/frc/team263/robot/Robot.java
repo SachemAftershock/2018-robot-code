@@ -14,9 +14,11 @@ import org.usfirst.frc.team263.robot.Enums.LEDMode;
 import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.RobotController;
 
 public class Robot extends TimedRobot {
 	XboxController pDriver, sDriver;
+	Elevator elevator;
 	SWDrive drive;
 	Elevator elevator;
 	CubeIntake intake;
@@ -29,6 +31,7 @@ public class Robot extends TimedRobot {
 		pDriver = new XboxController(0);
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
+		elevator = Elevator.getInstance();
 		drive = SWDrive.getInstance();
 		elevator = Elevator.getInstance();
 		autonomous = Autonomous.getInstance();
@@ -53,7 +56,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
-		LEDStrip.sendColor(LEDMode.eRainbow);
+		LEDStrip.sendColor(LEDMode.eTeleop);
 		compressor.setClosedLoopControl(true);
 		compressor.start();
 		elevator.drive(sDriver);
@@ -70,12 +73,19 @@ public class Robot extends TimedRobot {
 
 		if (pDriver.getAButton()) {
 			drive.setHighGear();
+			LEDStrip.sendColor(LEDMode.eHighGear);
 		}
 		if (pDriver.getXButton()) {
+			LEDStrip.sendColor(LEDMode.eLowGear);
 			drive.setLowGear();
+		}
+		
+		if(RobotController.isBrownedOut()) {
+			LEDStrip.sendColor(LEDMode.eBrownout);
 		}
 
 		drive.drive(pDriver);
+		elevator.drive(sDriver);
 	}
 
 	@Override
@@ -83,6 +93,7 @@ public class Robot extends TimedRobot {
 		if (logger != null) {
 			logger.forceSync();
 		}
+		LEDStrip.sendColor(LEDMode.eRainbow);
 	}
 
 	@Override
@@ -93,6 +104,7 @@ public class Robot extends TimedRobot {
 		
 		drive.zeroGyro();
 		autonomous.clearQueue();
+		LEDStrip.sendColor(LEDMode.eRainbow);
 		
 		autonomous.queueObjective(AutoObjective.eForward, 75);
 		autonomous.queueObjective(AutoObjective.eRotate, 90);

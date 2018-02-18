@@ -76,4 +76,7 @@ public class Constants {
 	final static int kT2 = 100;
 	final static int kVprog = 3000;
 	final static int kOverride = 4;
+
+	// Elevator Constants
+	final static int kElevatorTalon = 4;
 }
