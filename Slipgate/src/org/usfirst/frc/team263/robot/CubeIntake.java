@@ -1,5 +1,7 @@
 package org.usfirst.frc.team263.robot;
 
+import org.usfirst.frc.team263.robot.Enums.CIMode;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.XboxController;
@@ -51,15 +53,25 @@ public class CubeIntake {
 	 * @param speed
 	 *            Speed of CubeIntake
 	 */
-	public void drive(double speed) {
-		if (speed > 1) {
-			speed = 1;
-		} else if (speed < -1) {
-			speed = -1;
+	public void drive(CIMode mode) {
+		switch (mode) {
+		case eStandby:
+			mLeftTalon.set(ControlMode.PercentOutput, 0);
+			mRightTalon.set(ControlMode.PercentOutput, 0);
+			break;
+		case eIn:
+			// TODO: Implement arms grabbing
+			mLeftTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
+			mRightTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
+			break;
+		case eDrop:
+			// TODO: Implement arms dropping
+			break;
+		case eShoot:
+			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
+			mRightTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
+			break;
 		}
-
-		mRightTalon.set(ControlMode.PercentOutput, speed);
-		mLeftTalon.set(ControlMode.PercentOutput, speed);
 	}
 
 	/**
@@ -71,11 +83,13 @@ public class CubeIntake {
 	 */
 	public void drive(XboxController controller) {
 		if (controller.getXButton() && !isCubeIn()) {
-			drive(Constants.kCubeWheelSpeed);
+			drive(CIMode.eIn);
 		} else if (controller.getBButton()) {
-			drive(-Constants.kCubeWheelSpeed);
+			drive(CIMode.eShoot);
+		} else if (controller.getAButton()) {
+			drive(CIMode.eDrop);
 		} else {
-			drive(0);
+			drive(CIMode.eStandby);
 		}
 	}
 
@@ -94,13 +108,13 @@ public class CubeIntake {
 	 */
 	public void autonEjectCube() {
 		for (int i = 0; isCubeIn() && i < 3; i++) {
-			drive(Constants.kCubeWheelSpeed);
+			drive(CIMode.eShoot);
 			Timer.delay(0.3);// TODO Figure out minimum time needed to eject
 								// Cube
 			// Would be optimal to have encoder on here but that doesn't seem
 			// feasible. Time is next best option
 		}
-		drive(0);
+		drive(CIMode.eStandby);
 	}
 
 }
