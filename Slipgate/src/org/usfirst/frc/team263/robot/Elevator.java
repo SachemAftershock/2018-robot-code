@@ -9,6 +9,8 @@ import com.ctre.phoenix.motion.MotionProfileStatus;
 import com.ctre.phoenix.motion.SetValueMotionProfile;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
@@ -54,6 +56,8 @@ public class Elevator {
 		mElevatorTalon.config_kD(0, Constants.kElevatorKd, 0);
 		mElevatorTalon.config_kF(0, Constants.kElevatorKf, 0);
 		mElevatorTalon.setSelectedSensorPosition(Constants.kInitialCount, 0, 0);
+		mElevatorTalon.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyClosed, 0);
+		mElevatorTalon.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyClosed, 0);
 		profileStatus = new MotionProfileStatus();
 
 		// buffer and stream processor threads
@@ -126,6 +130,10 @@ public class Elevator {
 		if (controller.getStartButton()) {
 			override.set(true);
 			LEDStrip.sendColor(LEDMode.eOverrideToggle);
+		}
+		
+		if (mElevatorTalon.getSensorCollection().isRevLimitSwitchClosed()) {
+			mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
 		}
 
 		talonCheck();
