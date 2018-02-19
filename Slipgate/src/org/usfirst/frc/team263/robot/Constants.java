@@ -44,10 +44,8 @@ public class Constants {
 	final static int kLeftCubeWheel = 4;
 	final static int kRightCubeWheel = 5;
 	final static double kCubeWheelSpeed = 1;
-	final static int kLeftCubeSolFwd = 4;
-	final static int kLeftCubeSolRev = 5;
-	final static int kRightCubeSolFwd = 6;
-	final static int kRightCubeSolRev = 7;
+	final static int kCubeSolFwd = 4;
+	final static int kCubeSolRev = 5;
 	final static double kCubeCurrentThresh = 5;
 
 	// Drivebase sensor/wheel constants
