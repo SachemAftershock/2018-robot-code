@@ -5,7 +5,8 @@ import org.usfirst.frc.team263.robot.Enums.CIMode;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.Timer;
 
 /**
@@ -18,7 +19,7 @@ import edu.wpi.first.wpilibj.Timer;
 public class CubeIntake {
 	private static CubeIntake mInstance = new CubeIntake();
 	private TalonSRX mLeftTalon, mRightTalon;
-	private DigitalInput mLeftLimitSwitch, mRightLimitSwitch;
+	private DoubleSolenoid mLeftCylinder, mRightCylinder;
 
 	/**
 	 * Gets instance of singleton CubeIntake.
@@ -35,17 +36,14 @@ public class CubeIntake {
 	private CubeIntake() {
 		mLeftTalon = new TalonSRX(Constants.kLeftCubeWheel);
 		mRightTalon = new TalonSRX(Constants.kRightCubeWheel);
-
-		mLeftLimitSwitch = new DigitalInput(Constants.kCubeLeftLimitSwitch);
-		mRightLimitSwitch = new DigitalInput(Constants.kCubeRightLimitSwitch);
+		
+		mLeftCylinder = new DoubleSolenoid(0, Constants.kLeftCubeSolFwd, Constants.kLeftCubeSolRev);
+		mRightCylinder = new DoubleSolenoid(0, Constants.kRightCubeSolFwd, Constants.kRightCubeSolRev);
 	}
 
 	// TODO: Institute some closed loop control to ensure similar wheel
 	// speeds between each wheel.
 	// TODO: Find a better mapping for this on controllers.
-	// TODO: Autonomously run wheels using either computer vision, distance
-	// reading, or other approach TBD.
-	// TODO: Implement Solenoids
 
 	/**
 	 * Drives CubeIntake subsystem with speed given by parameter
@@ -60,12 +58,14 @@ public class CubeIntake {
 			mRightTalon.set(ControlMode.PercentOutput, 0);
 			break;
 		case eIn:
-			// TODO: Implement arms grabbing
+			mLeftCylinder.set(Value.kForward);
+			mRightCylinder.set(Value.kForward);
 			mLeftTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
 			mRightTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
 			break;
 		case eDrop:
-			// TODO: Implement arms dropping
+			mLeftCylinder.set(Value.kReverse);
+			mRightCylinder.set(Value.kReverse);
 			break;
 		case eShoot:
 			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
@@ -82,7 +82,7 @@ public class CubeIntake {
 	 *            Controller for CubeIntake instructions.
 	 */
 	public void drive(XboxController controller) {
-		if (controller.getXButton() && !isCubeIn()) {
+		if (controller.getXButton()) {
 			drive(CIMode.eIn);
 		} else if (controller.getBButton()) {
 			drive(CIMode.eShoot);
@@ -99,20 +99,16 @@ public class CubeIntake {
 	 * @return True if a Cube is in the mechanism, False otherwise.
 	 */
 	public boolean isCubeIn() {
-		return (mLeftLimitSwitch.get() || mRightLimitSwitch.get());
+		return (mLeftTalon.getOutputCurrent() + mRightTalon.getOutputCurrent()) / 2 > Constants.kCubeCurrentThresh;
 	}
 
 	/**
-	 * Ejects a Cube until it is no longer triggering the limit switches or 0.9
-	 * seconds are up, whichever comes first.
+	 * Ejects a Cube until 0.9 seconds have passed.
 	 */
 	public void autonEjectCube() {
-		for (int i = 0; isCubeIn() && i < 3; i++) {
+		for (int i = 0; i < 3; i++) {
 			drive(CIMode.eShoot);
-			Timer.delay(0.3);// TODO Figure out minimum time needed to eject
-								// Cube
-			// Would be optimal to have encoder on here but that doesn't seem
-			// feasible. Time is next best option
+			Timer.delay(0.3);
 		}
 		drive(CIMode.eStandby);
 	}

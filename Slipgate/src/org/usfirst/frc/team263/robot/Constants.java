@@ -44,15 +44,16 @@ public class Constants {
 	final static int kLeftCubeWheel = 4;
 	final static int kRightCubeWheel = 5;
 	final static double kCubeWheelSpeed = 1;
+	final static int kLeftCubeSolFwd = 4;
+	final static int kLeftCubeSolRev = 5;
+	final static int kRightCubeSolFwd = 6;
+	final static int kRightCubeSolRev = 7;
+	final static double kCubeCurrentThresh = 5;
 
 	// Drivebase sensor/wheel constants
 	final static double kUnitsPerRotationEnc = 4096.0 / 3.0;
 	final static int kWheelRadiusInches = 3;
 	final static double kWheelCircumference = 2 * kWheelRadiusInches * Math.PI;
-
-	// DigitalInputs Port IDs
-	final static int kCubeLeftLimitSwitch = 0;
-	final static int kCubeRightLimitSwitch = 1;
 
 	// Communication bus constants
 	final static int kArduinoI2CAddress = 10;
