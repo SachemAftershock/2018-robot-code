@@ -1,3 +1,4 @@
+
 package org.usfirst.frc.team263.robot;
 
 import java.util.List;
@@ -13,12 +14,13 @@ public class Autonomous {
 	private static Autonomous mInstance = new Autonomous();
 	private SWDrive mDrive;
 	private CubeIntake mIntake;
-	private Elevator mElevator;
+	private MagicElevator mElevator;
 	private Queue<AutoObjective> mObjectiveQueue;
 	private Queue<List<Double>> mSetpointQueue;
 	private AutoObjective mObjective;
 	private List<Double> mSetpoint;
 	private boolean mIsObjectiveFinished;
+	private double startTime;
 
 	/**
 	 * Constructor for Autonomous class.
@@ -26,11 +28,10 @@ public class Autonomous {
 	private Autonomous() {
 		mDrive = SWDrive.getInstance();
 		mIntake = CubeIntake.getInstance();
-		mElevator = Elevator.getInstance();
+		mElevator = MagicElevator.getInstance();
 		mObjectiveQueue = new LinkedList<AutoObjective>();
 		mSetpointQueue = new LinkedList<List<Double>>();
 		mIsObjectiveFinished = true;
-		mDrive.zeroGyro();
 	}
 
 	/**
@@ -52,13 +53,17 @@ public class Autonomous {
 		boolean isFirst = false;
 		if (!mObjectiveQueue.isEmpty() && mIsObjectiveFinished) {
 			mObjective = mObjectiveQueue.poll();
+			System.out.println(mObjective);
 			mSetpoint = mSetpointQueue.poll();
 			isFirst = true;
+			startTime = System.currentTimeMillis();
 		}
 
 		switch (mObjective) {
 		case eNothing:
 			mIsObjectiveFinished = true;
+			mDrive.setOpenLoop();
+			mDrive.drive(0, 0);
 			break;
 		case eForward:
 			if (isFirst) mDrive.setLinearDistance(mSetpoint.get(0));
@@ -70,13 +75,13 @@ public class Autonomous {
 			mIsObjectiveFinished = true;
 			break;
 		case eRotate:
-			if (isFirst) mDrive.setRotationTheta(mSetpoint.get(0));
+			if (isFirst) {mDrive.setRotationTheta(mSetpoint.get(0)); System.out.println(mDrive.isSetpointReached());}
 			mDrive.drive();
-			mIsObjectiveFinished = mDrive.isSetpointReached();
+			mIsObjectiveFinished = mDrive.isSetpointReached() && !isFirst;
 			break;
 		case eCubeAssist:
 			if (isFirst) mDrive.setCubeAssist(mSetpoint.get(0) == 0 ? Direction.eClockwise : Direction.eCounterclockwise);
-			mDrive.drive();
+			mDrive.drive(0, 0);
 			mIsObjectiveFinished = mDrive.isSetpointReached();
 			break;
 		case eCurve:
@@ -86,6 +91,7 @@ public class Autonomous {
 			break;
 		case eElevatorLevel:
 			if (isFirst) mElevator.toPosition(ElevatorPosition.values()[mSetpoint.get(0).intValue()]);	
+			mElevator.drive();
 			mIsObjectiveFinished = mElevator.isFinished();
 			break;
 		case eDriveAndElevator:
@@ -93,8 +99,17 @@ public class Autonomous {
 				mElevator.toPosition(ElevatorPosition.values()[mSetpoint.get(0).intValue()]);
 				mDrive.setLinearDistance(mSetpoint.get(1));
 			}
+			mElevator.drive();
+			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached() && mElevator.isFinished();
+		case eOpenArm:
+			mIntake.autonOpenArm();
+			mIsObjectiveFinished = true;
+		case eIntake:
+			mIntake.autonIntake();
+			mIsObjectiveFinished = true;
 		}
+		if (System.currentTimeMillis() - startTime > 2500 && mObjective != AutoObjective.eCubeAssist) mIsObjectiveFinished = true;
 	}
 	
 	/**

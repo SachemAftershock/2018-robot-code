@@ -15,9 +15,11 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 
 /**
  * Controller for elevator system on robot.
@@ -31,10 +33,11 @@ public class Elevator {
 	private static Elevator instance = new Elevator();
 	private MotionProfileStatus profileStatus;
 	private TalonSRX mElevatorTalon;
-	private boolean upPressed, downPressed, L3Pressed, nudgeUpPressed, nudgeDownPressed;
+	private boolean upPressed, downPressed, L3Pressed, nudgeUpPressed, nudgeDownPressed, yPressed, ltPressed;
 	private boolean profileReady, profileRunning;
 	private Notifier bufferProcessor;
 	private Notifier streamerThread;
+	private DoubleSolenoid tiltSolenoid;
 	private ElevatorPosition targetLevel;
 	private ElevatorPosition elevatorLevel;
 	private int currentCount;
@@ -57,15 +60,19 @@ public class Elevator {
 		mElevatorTalon.config_kF(0, Constants.kElevatorKf, 0);
 		mElevatorTalon.setSelectedSensorPosition(Constants.kInitialCount, 0, 0);
 		mElevatorTalon.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
-				LimitSwitchNormal.NormallyClosed, 0);
+				LimitSwitchNormal.NormallyOpen, 0);
 		mElevatorTalon.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
-				LimitSwitchNormal.NormallyClosed, 0);
+				LimitSwitchNormal.NormallyOpen, 0);
 		profileStatus = new MotionProfileStatus();
+		// mElevatorTalon.overrideLimitSwitchesEnable(true);
 
 		// buffer and stream processor threads
 		bufferProcessor = new Notifier(new BufferProcessor());
 		streamerThread = new Notifier(new ProfileStreamer());
 		streamerThread.startPeriodic(0.005);
+
+		// Solenoid for elevator tilt actuation
+		tiltSolenoid = new DoubleSolenoid(0, Constants.kElevatorSolFwd, Constants.kElevatorSolRev);
 
 		// Wrapper for profiling points
 		prof = new ElevatorProfile();
@@ -75,8 +82,8 @@ public class Elevator {
 		elevatorLevel = ElevatorPosition.kInitial;
 
 		// TODO: replace with actual values taken from open-loop control on
-		// elevator
-		encoderLevels = new int[] { -1, 118, 254, 263, 353, 1156 };
+		// elevator { reserved, ground, vault, switch, minScale, midScale, maxScale }
+		encoderLevels = new int[] { -1, 0, 460, 3400, 8000, 10000, 11500 };
 		currentCount = Constants.kInitialCount;
 
 		// booleans for button presses and profile availablility
@@ -87,6 +94,7 @@ public class Elevator {
 		profileRunning = false;
 		nudgeUpPressed = false;
 		nudgeDownPressed = false;
+		yPressed = false;
 
 		// Manual override for kill switch
 		override = new DigitalOutput(Constants.kOverride);
@@ -113,8 +121,15 @@ public class Elevator {
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0) {
 			clearEverything();
 			mElevatorTalon.set(ControlMode.PercentOutput, deadband(-controller.getY(Hand.kLeft), 0.1));
-		} else if (controller.getBumper(Hand.kRight) && !upPressed) {
+		}
+		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && ltPressed) {
+			mElevatorTalon.set(ControlMode.PercentOutput, 0.05);
+		}
+		if (controller.getBumper(Hand.kRight) && !upPressed) {
 			targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
+			if(targetLevel.ordinal() == encoderLevels.length-1) {
+				new ControllerRumble(controller, 1).run();
+			}
 		} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
 			targetLevel = ElevatorPosition.values()[Math.max(targetLevel.ordinal() - 1, 1)];
 		} else if (controller.getBumper(Hand.kLeft) && controller.getBumper(Hand.kRight)) {
@@ -139,6 +154,10 @@ public class Elevator {
 			mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
 		}
 
+		if (controller.getYButton() && !yPressed) {
+			tiltSolenoid.set(tiltSolenoid.get() == Value.kForward ? Value.kReverse : Value.kForward);
+		}
+
 		talonCheck();
 
 		upPressed = controller.getBumper(Hand.kRight);
@@ -146,6 +165,8 @@ public class Elevator {
 		L3Pressed = controller.getStickButton(Hand.kLeft);
 		nudgeUpPressed = controller.getPOV() == 0;
 		nudgeDownPressed = controller.getPOV() == 180;
+		yPressed = controller.getYButton();
+		ltPressed = deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0;
 	}
 
 	/**
@@ -193,11 +214,16 @@ public class Elevator {
 	 * Not the Maximilien Robespierre style though.
 	 */
 	private void executeHead() {
+		System.out.println("Current: " + elevatorLevel.ordinal() + "-" + mElevatorTalon.getSelectedSensorPosition(0)
+				+ ", Target: " + targetLevel.ordinal() + "-" + encoderLevels[targetLevel.ordinal()] + ", delta: "
+				+ getDelta(elevatorLevel) + ", btm: " + profileStatus.btmBufferCnt + ", " + profileReady + " "
+				+ profileRunning);
 		if (!atTarget() && profileReady) {
+			System.out.println("ExecuteHead");
 			profileRunning = true;
 		} else {
+			System.out.println("Cant ExecuteHead: " + !atTarget() + " " + profileReady);
 			new Notifier(new Runnable() {
-
 				@Override
 				public void run() {
 					profileRunning = (!atTarget() && profileReady);
@@ -220,10 +246,10 @@ public class Elevator {
 				mElevatorTalon.clearMotionProfileHasUnderrun(0);
 			}
 
-			if (profileStatus.btmBufferCnt > Constants.kMinBufferSize) {
-				profileReady = true;
+			// if (profileStatus.btmBufferCnt > Constants.kMinBufferSize) {
+			// profileReady = true;
 
-			}
+			// }
 
 			if (profileStatus.activePointValid && profileStatus.isLast) {
 				profileRunning = false;
@@ -244,8 +270,8 @@ public class Elevator {
 			}
 
 			/*
-			 * TODO: add data streamer that sends interpretable info to driver
-			 * station, either with ShuffleBoard, SmartDashboard, or UDP Sockets
+			 * TODO: add data streamer that sends interpretable info to driver station,
+			 * either with ShuffleBoard, SmartDashboard, or UDP Sockets
 			 */
 		}
 	}
@@ -316,8 +342,8 @@ public class Elevator {
 	}
 
 	/**
-	 * Runnable used to take queued commands and convert them to trapezoidal
-	 * motion profile trajectory points.
+	 * Runnable used to take queued commands and convert them to trapezoidal motion
+	 * profile trajectory points.
 	 * 
 	 * @author Rohan Bapat
 	 * 
@@ -334,13 +360,14 @@ public class Elevator {
 		}
 
 		/**
-		 * Thread-body that runs every 5 milliseconds; checks if it needs to
-		 * generate new trajectory points to be streamed and then streams enough
-		 * points such that it is 250ms ahead of the TalonSRX.
+		 * Thread-body that runs every 5 milliseconds; checks if it needs to generate
+		 * new trajectory points to be streamed and then streams enough points such that
+		 * it is 250ms ahead of the TalonSRX.
 		 */
 		public void run() {
 			synchronized (this) {
-				if (target != targetLevel || getDelta(elevatorLevel) < Constants.kElevatorThreshhold) {
+
+				if (target != targetLevel || getDelta(elevatorLevel) > Constants.kElevatorThreshhold) {
 					clearEverything();
 					target = targetLevel;
 					double[] jniTargets = ProfileGeneratorJNI.createNewProfile(Constants.kItp, Constants.kT1,

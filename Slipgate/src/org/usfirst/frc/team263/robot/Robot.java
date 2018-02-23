@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj.RobotController;
 
 public class Robot extends TimedRobot {
 	XboxController pDriver, sDriver;
-	Elevator elevator;
+	MagicElevator elevator;
 	SWDrive drive;
 	CubeIntake intake;
 	Logger logger;
@@ -27,12 +27,13 @@ public class Robot extends TimedRobot {
 	
 	@Override
 	public void robotInit() {
+		System.loadLibrary("ProfileGeneratorJNI");
+		
 		pDriver = new XboxController(0);
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
-		elevator = Elevator.getInstance();
 		drive = SWDrive.getInstance();
-		elevator = Elevator.getInstance();
+		elevator = MagicElevator.getInstance();
 		autonomous = Autonomous.getInstance();
 		compressor = new Compressor();
 
@@ -41,10 +42,8 @@ public class Robot extends TimedRobot {
 		} catch (IOException e) {
 			DriverStation.reportError("Couldn't instantiate logger", false);
 		}
-		
-		System.loadLibrary("ProfileGeneratorJNI");
 	}
-
+	
 	@Override
 	public void teleopInit() {
 		if (logger != null) {
@@ -58,7 +57,6 @@ public class Robot extends TimedRobot {
 		LEDStrip.sendColor(LEDMode.eTeleop);
 		compressor.setClosedLoopControl(true);
 		compressor.start();
-		elevator.drive(sDriver);
 		if (pDriver.getBumper(Hand.kLeft)) {
 			Limelight.setCameraMode(CameraMode.eVision);
 			drive.setCubeAssist(Direction.eCounterclockwise);
@@ -85,6 +83,7 @@ public class Robot extends TimedRobot {
 
 		drive.drive(pDriver);
 		elevator.drive(sDriver);
+		intake.drive(sDriver);
 	}
 
 	@Override
@@ -97,22 +96,39 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
+		Limelight.setCameraMode(CameraMode.eVision);
 		if (logger != null) {
 			logger.write("Entering Autonomous Mode", true);
 		}
+		
+		autonomous.clearQueue();
 		
 		drive.zeroGyro();
 		autonomous.clearQueue();
 		LEDStrip.sendColor(LEDMode.eRainbow);
 		
-		autonomous.queueObjective(AutoObjective.eForward, 75);
-		autonomous.queueObjective(AutoObjective.eRotate, 90);
-		autonomous.queueObjective(AutoObjective.eForward, 120);
-		autonomous.queueObjective(AutoObjective.eRotate, 180);
-		autonomous.queueObjective(AutoObjective.eForward, 45);
-		autonomous.queueObjective(AutoObjective.eRotate, 90);
-		autonomous.queueObjective(AutoObjective.eForward, 80);
-		autonomous.queueObjective(AutoObjective.eCubeAssist, 1);
+		
+		/*
+		 * autonomous.queueObjective(AutoObjective.eForward, 135);
+			autonomous.queueObjective(AutoObjective.eRotate, 90);
+			autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+			autonomous.queueObjective(AutoObjective.eRotate, 0);
+			autonomous.queueObjective(AutoObjective.eNothing, 0);
+		 */
+		if (DriverStation.getInstance().getGameSpecificMessage().charAt(0) == 'R') {
+			autonomous.queueObjective(AutoObjective.eForward, 30);
+			autonomous.queueObjective(AutoObjective.eRotate, 60);
+			autonomous.queueObjective(AutoObjective.eForward, 50);
+			autonomous.queueObjective(AutoObjective.eRotate, 0);
+			autonomous.queueObjective(AutoObjective.eForward, 35);
+			autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+			autonomous.queueObjective(AutoObjective.eRotate, -90);
+			autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
+			autonomous.queueObjective(AutoObjective.eOpenArm, 0);
+			autonomous.queueObjective(AutoObjective.eForward, 15);
+			autonomous.queueObjective(AutoObjective.eIntake, 0);
+		}
+		
 	}
 
 	@Override
@@ -122,7 +138,8 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
-		drive.setOpenLoop();
+		drive.zeroGyro();
+		drive.setLinearDistance(50);
 		try {
 			double[] x = ProfileGeneratorJNI.createNewProfile(10, 500, 1000, 200, 40000);
 			System.out.println(Arrays.toString(x));
@@ -133,6 +150,6 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testPeriodic() {
-		drive.drive(pDriver);
+		drive.drive();
 	}
 }

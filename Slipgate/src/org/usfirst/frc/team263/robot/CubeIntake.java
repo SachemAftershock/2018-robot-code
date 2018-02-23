@@ -20,6 +20,7 @@ public class CubeIntake {
 	private static CubeIntake mInstance = new CubeIntake();
 	private TalonSRX mLeftTalon, mRightTalon;
 	private DoubleSolenoid mSolenoid;
+	private CIMode previousMode;
 
 	/**
 	 * Gets instance of singleton CubeIntake.
@@ -36,8 +37,9 @@ public class CubeIntake {
 	private CubeIntake() {
 		mLeftTalon = new TalonSRX(Constants.kLeftCubeWheel);
 		mRightTalon = new TalonSRX(Constants.kRightCubeWheel);
-		
+		mLeftTalon.setInverted(true);
 		mSolenoid = new DoubleSolenoid(0, Constants.kCubeSolFwd, Constants.kCubeSolRev);
+		
 	}
 
 	// TODO: Institute some closed loop control to ensure similar wheel
@@ -57,12 +59,23 @@ public class CubeIntake {
 			mRightTalon.set(ControlMode.PercentOutput, 0);
 			break;
 		case eIn:
-			mSolenoid.set(Value.kForward);
 			mLeftTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
 			mRightTalon.set(ControlMode.PercentOutput, Constants.kCubeWheelSpeed);
 			break;
 		case eDrop:
-			mSolenoid.set(Value.kReverse);
+			if (previousMode == CIMode.eDrop) {
+				return;
+			}
+			switch (mSolenoid.get()) {
+			case kForward:
+				mSolenoid.set(Value.kReverse);
+				break;
+			case kReverse:
+				mSolenoid.set(Value.kForward);
+				break;
+			default:
+				mSolenoid.set(Value.kReverse);
+			}
 			break;
 		case eShoot:
 			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
@@ -83,9 +96,16 @@ public class CubeIntake {
 			drive(CIMode.eIn);
 		} else if (controller.getBButton()) {
 			drive(CIMode.eShoot);
-		} else if (controller.getAButton()) {
+		} 
+		
+		if (controller.getAButton()) {
 			drive(CIMode.eDrop);
+			previousMode = CIMode.eDrop;
 		} else {
+			previousMode = CIMode.eStandby;
+		}
+		
+		if (!(controller.getXButton() || controller.getAButton() || controller.getBButton())) {
 			drive(CIMode.eStandby);
 		}
 	}
@@ -107,6 +127,19 @@ public class CubeIntake {
 			drive(CIMode.eShoot);
 			Timer.delay(0.3);
 		}
+		drive(CIMode.eStandby);
+	}
+
+	public void autonOpenArm() {
+		drive(CIMode.eDrop);
+		drive(CIMode.eStandby);
+	}
+
+	public void autonIntake() {
+		drive(CIMode.eIn);
+		Timer.delay(0.3);
+		drive(CIMode.eDrop);
+		Timer.delay(0.3);
 		drive(CIMode.eStandby);
 	}
 

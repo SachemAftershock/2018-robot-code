@@ -5,12 +5,16 @@ import org.usfirst.frc.team263.robot.Enums.LEDMode;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 
 /**
  * Controller for elevator system on robot.
@@ -23,9 +27,11 @@ public class MagicElevator {
 
 	private static MagicElevator instance = new MagicElevator();
 
-	private boolean upPressed, downPressed, L3Pressed, nudgeUpPressed, nudgeDownPressed, running;
+	private boolean upPressed, downPressed, L3Pressed, nudgeUpPressed, nudgeDownPressed, running, ltPressed, yPressed,
+			startPressed;
 	private ElevatorPosition targetLevel, elevatorLevel;
 	private TalonSRX mElevatorTalon;
+	private DoubleSolenoid tiltSolenoid;
 	private DigitalOutput override;
 	private int[] encoderLevels;
 	private int currentCount;
@@ -39,18 +45,31 @@ public class MagicElevator {
 		mElevatorTalon.setNeutralMode(NeutralMode.Brake);
 		mElevatorTalon.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
 		mElevatorTalon.setSensorPhase(true);
-		mElevatorTalon.config_kP(0, Constants.kElevatorKp, 0);
-		mElevatorTalon.config_kI(0, Constants.kElevatorKi, 0);
-		mElevatorTalon.config_kD(0, Constants.kElevatorKd, 0);
-		mElevatorTalon.config_kF(0, Constants.kElevatorKf, 0);
+		mElevatorTalon.config_kP(0, 10.0, 0);
+		mElevatorTalon.config_kI(0, 0.0, 0);
+		mElevatorTalon.config_kD(0, 0.0, 0);
+		mElevatorTalon.config_kF(0, 0.0, 0);
+		mElevatorTalon.configMotionAcceleration(1000, 0);
+		mElevatorTalon.configMotionCruiseVelocity(5000, 0);
+		mElevatorTalon.config_IntegralZone(0, 200, 0);
+		mElevatorTalon.configClosedloopRamp(0, 256);
+		mElevatorTalon.configOpenloopRamp(0, 256);
+		mElevatorTalon.configAllowableClosedloopError(0, Constants.kElevatorThreshhold, 0);
 		mElevatorTalon.setSelectedSensorPosition(0, Constants.kInitialCount, 0); // TODO: CHECK DOCUMENTATION
+
+		mElevatorTalon.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
+				LimitSwitchNormal.NormallyOpen, 0);
+		mElevatorTalon.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
+				LimitSwitchNormal.NormallyOpen, 0);
 
 		// elevator and encoder levels
 		targetLevel = ElevatorPosition.kInitial;
 		elevatorLevel = ElevatorPosition.kInitial;
 
 		// TODO: replace with actual values taken from open-loop control on elevator
-		encoderLevels = new int[] { -1, 118, 254, 263, 353, 1156 };
+		// elevator { reserved, ground, vault, switch, minScale, midScale, maxScale }
+		encoderLevels = new int[] { -1, 0, 460, 3400, 8000, 10000, 11500 };
+		tiltSolenoid = new DoubleSolenoid(0, Constants.kElevatorSolFwd, Constants.kElevatorSolRev);
 		currentCount = Constants.kInitialCount;
 
 		// booleans for button presses and profile availablility
@@ -58,7 +77,10 @@ public class MagicElevator {
 		downPressed = false;
 		L3Pressed = false;
 		nudgeUpPressed = false;
+		yPressed = false;
+		ltPressed = false;
 		nudgeDownPressed = false;
+		startPressed = false;
 
 		// Manual override for kill switch
 		override = new DigitalOutput(Constants.kOverride);
@@ -80,10 +102,16 @@ public class MagicElevator {
 	 *            Secondary driver's controller.
 	 */
 	public void drive(XboxController controller) {
+		currentCount = mElevatorTalon.getSelectedSensorPosition(0);
+
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0) {
-			clearEverything();
 			mElevatorTalon.set(ControlMode.PercentOutput, deadband(-controller.getY(Hand.kLeft), 0.1));
-		} else if (controller.getBumper(Hand.kRight) && !upPressed) {
+		}
+		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && ltPressed && !running) {
+			mElevatorTalon.set(ControlMode.PercentOutput, 0.05);
+		}
+
+		if (controller.getBumper(Hand.kRight) && !upPressed) {
 			targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
 		} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
 			targetLevel = ElevatorPosition.values()[Math.max(targetLevel.ordinal() - 1, 1)];
@@ -104,11 +132,24 @@ public class MagicElevator {
 			override.set(true);
 			LEDStrip.sendColor(LEDMode.eOverrideToggle);
 		}
-		
-		if(running && !atTarget()) {
+
+		if (running && !atTarget()) {
 			mElevatorTalon.set(ControlMode.MotionMagic, encoderLevels[targetLevel.ordinal()]);
 		}
-		
+
+		if (controller.getYButton() && !yPressed) {
+			tiltSolenoid.set(tiltSolenoid.get() == Value.kForward ? Value.kReverse : Value.kForward);
+		}
+
+		if (mElevatorTalon.getSensorCollection().isRevLimitSwitchClosed()) {
+			mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
+		}
+
+		if (controller.getStartButton() && !startPressed) {
+			targetLevel = ElevatorPosition.kGround;
+			executeHead();
+		}
+
 		if (getDelta(elevatorLevel) > Constants.kElevatorThreshhold) {
 			for (ElevatorPosition el : ElevatorPosition.values()) {
 				if (getDelta(el) < Constants.kElevatorThreshhold) {
@@ -117,32 +158,36 @@ public class MagicElevator {
 				}
 			}
 		}
-		
+
+		if (running) {
+			mElevatorTalon.set(ControlMode.Position, encoderLevels[targetLevel.ordinal()]);
+		}
 
 		upPressed = controller.getBumper(Hand.kRight);
 		downPressed = controller.getBumper(Hand.kLeft);
+		ltPressed = deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0;
 		L3Pressed = controller.getStickButton(Hand.kLeft);
 		nudgeUpPressed = controller.getPOV() == 0;
+		yPressed = controller.getYButton();
 		nudgeDownPressed = controller.getPOV() == 180;
+		startPressed = controller.getStartButton();
 	}
 	
-	/**
-	 * Gets distance between given elevator position and actual elevator position in
-	 * natural units
-	 * 
-	 * @param position
-	 *            elevator position to find delta
-	 * 
-	 * @return Gets distance between assumed elevator position and actual elevator
-	 *         position in natural units
-	 */
+	public void drive() {
+		if (running) {
+			mElevatorTalon.set(ControlMode.Position, encoderLevels[targetLevel.ordinal()]);
+			tiltSolenoid.set(Value.kReverse);
+		}
+	}
+
 	private int getDelta(ElevatorPosition position) {
 		return Math.abs(currentCount - encoderLevels[position.ordinal()]);
 	}
-	
+
 	private boolean atTarget() {
 		return elevatorLevel == targetLevel && getDelta(elevatorLevel) < Constants.kElevatorThreshhold;
 	}
+
 	/**
 	 * Executes the command at the head of the trajectory queue.
 	 * 
@@ -172,5 +217,15 @@ public class MagicElevator {
 	 */
 	private double deadband(double value, double deadband) {
 		return Math.abs(value) > deadband ? value : 0.0;
+	}
+
+	public void toPosition(ElevatorPosition elevatorPosition) {
+		targetLevel = elevatorPosition;
+		executeHead();
+
+	}
+
+	public boolean isFinished() {
+		return atTarget();
 	}
 }

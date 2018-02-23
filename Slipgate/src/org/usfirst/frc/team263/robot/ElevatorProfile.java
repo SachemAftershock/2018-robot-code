@@ -1,5 +1,7 @@
 package org.usfirst.frc.team263.robot;
 
+import java.util.Arrays;
+
 import com.ctre.phoenix.motion.TrajectoryPoint;
 import com.ctre.phoenix.motion.TrajectoryPoint.TrajectoryDuration;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -46,6 +48,7 @@ public class ElevatorProfile {
 	 *            initial level of elevator.
 	 */
 	public void setGenerated(double[] trajectories, double currentPosition) {
+		System.out.println("JNI Recieved: " + Arrays.toString(trajectories));
 		this.trajectories = trajectories;
 		numTrajectories = trajectories.length;
 		isGenerated = true;
@@ -76,14 +79,15 @@ public class ElevatorProfile {
 		if (!isGenerated) {
 			return;
 		} else {
+			
 			TrajectoryPoint point = new TrajectoryPoint();
 			mElevatorTalon.clearMotionProfileTrajectories();
-			mElevatorTalon.configMotionProfileTrajectoryPeriod(0, 0);
+			mElevatorTalon.configMotionProfileTrajectoryPeriod(10, 0);
 			if(index + amount > trajectories.length)
-				amount = trajectories.length - index;
-				
-			for (int x = index; x < index + amount; x++) {
-				if (x != 0) {
+				amount = trajectories.length - (index+1);
+			System.out.println(amount);
+			for (int x = index; x < index + amount; x++, index++) {
+				if (x > 2) {
 					position += (trajectories[x-1] + trajectories[x]) / 2 * 0.01;
 				}
 				point.position = position;
@@ -96,7 +100,7 @@ public class ElevatorProfile {
 
 				point.zeroPos = false;
 				point.isLastPoint = (x == trajectories.length - 1);
-
+				
 				mElevatorTalon.pushMotionProfileTrajectory(point);
 
 			}
@@ -106,7 +110,7 @@ public class ElevatorProfile {
 	public void reset() {
 		trajectories = new double[0];
 		numTrajectories = 0;
-		index = 0;
+		index = 1;
 		isGenerated = false;
 	}
 
