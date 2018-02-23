@@ -1,9 +1,9 @@
 package org.usfirst.frc.team263.robot;
 
+import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 import org.usfirst.frc.team263.robot.Enums.Direction;
 import org.usfirst.frc.team263.robot.Enums.DriveMode;
 import org.usfirst.frc.team263.robot.Enums.GearingMode;
-import org.usfirst.frc.team263.robot.Limelight.CameraMode;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -12,10 +12,13 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 
 /**
  * Drivebase code for a six-wheel WC-style drive.
@@ -29,7 +32,7 @@ public class SWDrive {
 	private DriveMode mPreviousDriveMode;
 	private static SWDrive mInstance = new SWDrive();
 	private TalonSRX mLeftMaster, mRightMaster;
-	private VictorSPX mLeftSlave, mRightSlave;
+	private VictorSPX mLeftSlave, mRightSlave, climberVictor;
 	private AHRS mNavX;
 	private double mLeftSetpoint, mRightSetpoint;
 	private double mTheta, mVelocityRatio;
@@ -37,7 +40,10 @@ public class SWDrive {
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
 	private Solenoid mSolenoid;
-	private boolean mIsSetpointReached;
+	private DoubleSolenoid climberSolenoid;
+	private boolean mIsSetpointReached, R3Pressed;
+	boolean f;
+	int osci;
 
 	/**
 	 * Gets instance of singleton SWDrive.
@@ -61,6 +67,7 @@ public class SWDrive {
 		mLeftSetpoint = 0;
 		mRightSetpoint = 0;
 		mTheta = 0;
+		f = false;
 		mVelocityRatio = 0;
 
 		// Initialize all master and slave motors.
@@ -87,12 +94,17 @@ public class SWDrive {
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 
-		mSolenoid = new Solenoid(Constants.kDriveSolenoidPort);
+		climberVictor = new VictorSPX(Constants.kClimberVictor);
+		climberVictor.setNeutralMode(NeutralMode.Brake);
+
+		mSolenoid = new Solenoid(1, Constants.kDriveSolenoidPort);
+		climberSolenoid = new DoubleSolenoid(0, Constants.kClimberSolFwd, Constants.kClimberSolRev);
 
 		setLowGear();
 		configureClosedLoop();
 
 		mIsSetpointReached = true;
+		R3Pressed = false;
 
 		// Initialize NavX in MXP port.
 		mNavX = new AHRS(SPI.Port.kMXP);
@@ -124,13 +136,15 @@ public class SWDrive {
 			} else if (mDriveMode == DriveMode.eRotational) {
 				// If this is the first loop of the PID, the PID must be
 				// initalized.
-				if (mPreviousDriveMode != DriveMode.eRotational || mPreviousGearingMode != mGearingMode) {
+				if (mPreviousDriveMode != DriveMode.eRotational || mPreviousGearingMode != mGearingMode
+						|| mTheta != PidController.setPoint) {
 					PidController.initRotationalPid(Constants.kDriveRKp[mGearingMode.ordinal()],
 							Constants.kDriveRKi[mGearingMode.ordinal()], Constants.kDriveRKd[mGearingMode.ordinal()],
 							Constants.kDriveRKf[mGearingMode.ordinal()], mTheta);
 				}
-				double leftOutput = -PidController.getPidOutput();
-				double rightOutput = PidController.getPidOutput();
+				double u = PidController.getPidOutput();
+				double leftOutput = -u;
+				double rightOutput = u;
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
@@ -167,10 +181,14 @@ public class SWDrive {
 					double leftOutput = 0;
 					double rightOutput = 0;
 
-					if (PidController.withinEpsilon() && Limelight.getTa() < 75) {
-						leftOutput = Constants.kCubeSeekSpeed[mGearingMode.ordinal()];
-						rightOutput = Constants.kCubeSeekSpeed[mGearingMode.ordinal()];
+					if (PidController.withinEpsilon()) {
+						System.out.println("Forward phase");
+						leftOutput = 0.3;
+						rightOutput = 0.3;
+						Timer.delay(0.2);
+						mIsSetpointReached = true;
 					} else {
+						f = false;
 						leftOutput = -PidController.getPidOutput();
 						rightOutput = PidController.getPidOutput();
 					}
@@ -181,8 +199,9 @@ public class SWDrive {
 					mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 					mRightMaster.set(ControlMode.PercentOutput, output[1]);
 
-					mIsSetpointReached = PidController.withinEpsilon() && Limelight.getTa() >= 75;
+					mIsSetpointReached = PidController.withinEpsilon();
 				} else {
+					System.out.println("Searching...");
 					// TODO: Add back controller feedback here.
 					if (mCubeAssistDirection == Direction.eClockwise) {
 						mLeftMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
@@ -192,7 +211,7 @@ public class SWDrive {
 						mRightMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 					}
 
-					mIsSetpointReached = false;
+					mIsSetpointReached |= false;
 				}
 			} else if (mDriveMode == DriveMode.eCurve) {
 				// If this is the first loop of the PID, the PID must be
@@ -207,7 +226,7 @@ public class SWDrive {
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
-				
+
 				mLeftMaster.set(ControlMode.PercentOutput, -output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, -output[1]);
 			}
@@ -225,7 +244,24 @@ public class SWDrive {
 	 *            Primary driver's controller.
 	 */
 	public void drive(XboxController controller) {
-		drive(-controller.getY(Hand.kLeft), controller.getX(Hand.kRight));
+		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0) {
+			drive(-controller.getY(Hand.kLeft), controller.getX(Hand.kRight));
+		} else {
+			drive(-Constants.kDriveMultiplier * controller.getY(Hand.kLeft),
+					Constants.kDriveMultiplier * controller.getX(Hand.kRight));
+		}
+
+		if (controller.getStickButton(Hand.kRight) && !R3Pressed) {
+			climberSolenoid.set(Value.kForward);
+		}
+
+		if (controller.getBackButton() && deadband(-controller.getY(Hand.kRight), 0.1) != 0/* && climberSolenoid.get() == Value.kForward */) {
+			climberVictor.set(ControlMode.PercentOutput, deadband(-controller.getY(Hand.kRight), 0.1));
+		} else {
+			climberVictor.set(ControlMode.PercentOutput, 0.0);
+		}
+		// 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263
+		R3Pressed = controller.getStickButton(Hand.kRight);
 	}
 
 	/**
@@ -381,6 +417,7 @@ public class SWDrive {
 	public void setRotationTheta(double theta) {
 		mTheta = theta;
 		mDriveMode = DriveMode.eRotational;
+		mIsSetpointReached = false;
 	}
 
 	/**
@@ -454,11 +491,13 @@ public class SWDrive {
 		/**
 		 * Sees if the controller is in a state of allowable error.
 		 * 
-		 * @return True if controller is within allowable error, false
-		 *         otherwise.
+		 * @return True if controller is within allowable error, false otherwise.
 		 */
 		public static boolean withinEpsilon() {
 			error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
+			if (SWDrive.getInstance().mDriveMode == DriveMode.eCubeAssist) {
+				return Math.abs(error) <= Constants.kDriveREpsilon[mGearingMode.ordinal()] * 5;
+			}
 			return Math.abs(error) <= Constants.kDriveREpsilon[mGearingMode.ordinal()];
 		}
 
@@ -483,6 +522,10 @@ public class SWDrive {
 			if (rotation) {
 				error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
 				error = Math.abs(error) > Constants.kDriveREpsilon[mGearingMode.ordinal()] ? error : 0;
+				if (SWDrive.getInstance().mDriveMode == DriveMode.eCubeAssist) {
+					error = Math.abs(error) > 5 * Constants.kDriveREpsilon[mGearingMode.ordinal()] ? error : 0;
+
+				}
 			}
 			integral += error;
 			double u = Kp * error + Ki * integral + Kd * (error - previousError);

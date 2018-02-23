@@ -71,3 +71,6 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
+
+# JNI Shared Library
+.so

@@ -7,5 +7,5 @@ package org.usfirst.frc.team263.robot.Enums;
  *
  */
 public enum ElevatorPosition {
-	kGround, kVault, kSwitch, kBottomScale, kMiddleScale, kUpperScale;
+	kInitial, kGround, kVault, kSwitch, kBottomScale, kMiddleScale, kUpperScale;
 }
