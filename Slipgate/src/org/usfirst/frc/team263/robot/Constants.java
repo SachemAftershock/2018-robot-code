@@ -27,7 +27,7 @@ public class Constants {
 	final static double kDriveMultiplier = 0.25;
 
 	// Rotational PID Constants
-	final static double[] kDriveRKp = { 0.009, 0.003 };
+	final static double[] kDriveRKp = { 0.010, 0.003 };
 	final static double[] kDriveRKi = { 0.000, 0.000 };
 	final static double[] kDriveRKd = { 0.030, 0.03 };
 	final static double[] kDriveRKf = { 0.00, 0.00 };

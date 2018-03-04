@@ -147,7 +147,7 @@ public class Elevator {
 
 		if (controller.getStartButton()) {
 			override.set(true);
-			LEDStrip.sendColor(LEDMode.eOverrideToggle);
+			LEDStrip.sendColor(LEDMode.eBlink);
 		}
 
 		if (mElevatorTalon.getSensorCollection().isRevLimitSwitchClosed()) {
@@ -376,7 +376,7 @@ public class Elevator {
 					double[] targetVelocities = Arrays.copyOfRange(jniTargets, 1, jniTargets.length);
 					prof.setGenerated(targetVelocities, mElevatorTalon.getSelectedSensorPosition(0));
 					bufferProcessor.startPeriodic(0.005);
-					LEDStrip.sendColor(LEDMode.eProfileReady);
+					LEDStrip.sendColor(LEDMode.eBlue);
 				}
 				int amount = Math.max(25 - (profileStatus.btmBufferCnt + profileStatus.topBufferCnt), 0);
 				prof.pushBuffer(mElevatorTalon, amount);

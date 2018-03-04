@@ -10,6 +10,9 @@ import org.usfirst.frc.team263.robot.Enums.AutoObjective;
 import org.usfirst.frc.team263.robot.Enums.Direction;
 import org.usfirst.frc.team263.robot.Enums.ElevatorPosition;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+
 public class Autonomous {
 	private static Autonomous mInstance = new Autonomous();
 	private SWDrive mDrive;
@@ -57,6 +60,7 @@ public class Autonomous {
 			mSetpoint = mSetpointQueue.poll();
 			isFirst = true;
 			startTime = System.currentTimeMillis();
+			
 		}
 
 		switch (mObjective) {
@@ -89,6 +93,7 @@ public class Autonomous {
 			// matures the feature.
 			mIsObjectiveFinished = true;
 			break;
+		/*
 		case eElevatorLevel:
 			if (isFirst) mElevator.toPosition(ElevatorPosition.values()[mSetpoint.get(0).intValue()]);	
 			mElevator.drive();
@@ -102,12 +107,16 @@ public class Autonomous {
 			mElevator.drive();
 			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached() && mElevator.isFinished();
+		*/
 		case eOpenArm:
 			mIntake.autonOpenArm();
 			mIsObjectiveFinished = true;
 		case eIntake:
 			mIntake.autonIntake();
 			mIsObjectiveFinished = true;
+		case eTriggerClimber:
+			mDrive.setClimber(Value.kReverse);
+			
 		}
 		if (System.currentTimeMillis() - startTime > 2500 && mObjective != AutoObjective.eCubeAssist) mIsObjectiveFinished = true;
 	}

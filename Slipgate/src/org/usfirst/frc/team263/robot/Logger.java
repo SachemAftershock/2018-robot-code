@@ -15,18 +15,25 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public class Logger {
 	private BufferedWriter mWriter;
+	private boolean properInstance = false;
 
 	/**
 	 * Creates a new Logger object with a new file.
 	 * 
 	 * @throws IOException
 	 */
-	public Logger() throws IOException {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-		String fname = "/U/ROBORIO_LOG_" + dateFormat.format(new Date()) + ".log";
-		FileWriter fstream = new FileWriter(fname);
-		mWriter = new BufferedWriter(fstream);
-		System.out.println("Created Logger");
+	public Logger() {
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+			String fname = "/U/ROBORIO_LOG_" + dateFormat.format(new Date()) + ".log";
+			FileWriter fstream = new FileWriter(fname);
+			mWriter = new BufferedWriter(fstream);
+			properInstance = true;
+			System.out.println("Created Logger");
+		} catch (IOException e) {
+			DriverStation.reportError("Problems instantiating logger.", false);
+			properInstance = false;
+		}
 	}
 
 	/**
@@ -40,6 +47,9 @@ public class Logger {
 	 * @return 0 if successful, -1 if error occurred.
 	 */
 	public int write(String s, boolean forcedSync) {
+		if (!properInstance) {
+			return -1;
+		} 
 		try {
 			mWriter.write(System.nanoTime() + "\t : \t" + s + '\n');
 			
@@ -60,6 +70,9 @@ public class Logger {
 	 * @return 0 if successful, -1 if error occurred.
 	 */
 	public int close() {
+		if (!properInstance) {
+			return -1;
+		}
 		try {
 			mWriter.flush();
 			mWriter.close();
@@ -78,6 +91,9 @@ public class Logger {
 	 * @return 0 if successful, -1 otherwise.
 	 */
 	public int forceSync() {
+		if (!properInstance) {
+			return -1;
+		}
 		try {
 			mWriter.flush();
 		} catch (IOException e) {
