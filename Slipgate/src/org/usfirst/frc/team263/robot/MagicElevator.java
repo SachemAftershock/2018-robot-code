@@ -68,7 +68,7 @@ public class MagicElevator {
 
 		// TODO: replace with actual values taken from open-loop control on elevator
 		// elevator { reserved, ground, vault, switch, minScale, midScale, maxScale }
-		encoderLevels = new int[] { -1, 0, 460, 3400, 8000, 10000, 11500 };
+		encoderLevels = new int[] { -1, 0, 460, 3400, 8000, 10000, 11000 };
 		tiltSolenoid = new DoubleSolenoid(0, Constants.kElevatorSolFwd, Constants.kElevatorSolRev);
 		currentCount = Constants.kInitialCount;
 
@@ -103,14 +103,15 @@ public class MagicElevator {
 	 */
 	public void drive(XboxController controller) {
 		currentCount = mElevatorTalon.getSelectedSensorPosition(0);
-
+		
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0) {
 			mElevatorTalon.set(ControlMode.PercentOutput, deadband(-controller.getY(Hand.kLeft), 0.1));
 		}
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && ltPressed && !running) {
 			mElevatorTalon.set(ControlMode.PercentOutput, 0.05);
 		}
-
+		
+		/*
 		if (controller.getBumper(Hand.kRight) && !upPressed) {
 			targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
 		} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
@@ -127,15 +128,18 @@ public class MagicElevator {
 		} else if (controller.getStickButton(Hand.kLeft) && !L3Pressed) {
 			executeHead();
 		}
+		
+		
 
 		if (controller.getStartButton()) {
 			override.set(true);
-			LEDStrip.sendColor(LEDMode.eOverrideToggle);
+			LEDStrip.sendColor(LEDMode.eBlink);
 		}
 
 		if (running && !atTarget()) {
 			mElevatorTalon.set(ControlMode.MotionMagic, encoderLevels[targetLevel.ordinal()]);
 		}
+		*/
 
 		if (controller.getYButton() && !yPressed) {
 			tiltSolenoid.set(tiltSolenoid.get() == Value.kForward ? Value.kReverse : Value.kForward);
@@ -145,6 +149,7 @@ public class MagicElevator {
 			mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
 		}
 
+		/*
 		if (controller.getStartButton() && !startPressed) {
 			targetLevel = ElevatorPosition.kGround;
 			executeHead();
@@ -162,8 +167,11 @@ public class MagicElevator {
 		if (running) {
 			mElevatorTalon.set(ControlMode.Position, encoderLevels[targetLevel.ordinal()]);
 		}
+		
+		*/
 
 		upPressed = controller.getBumper(Hand.kRight);
+
 		downPressed = controller.getBumper(Hand.kLeft);
 		ltPressed = deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0;
 		L3Pressed = controller.getStickButton(Hand.kLeft);

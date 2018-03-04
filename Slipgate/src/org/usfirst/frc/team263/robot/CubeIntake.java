@@ -78,8 +78,8 @@ public class CubeIntake {
 			}
 			break;
 		case eShoot:
-			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
-			mRightTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed);
+			mLeftTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed / 1.1);
+			mRightTalon.set(ControlMode.PercentOutput, -Constants.kCubeWheelSpeed / 1.1);
 			break;
 		}
 	}
