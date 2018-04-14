@@ -115,7 +115,7 @@ public class Autonomous {
 			mIntake.autonIntake();
 			mIsObjectiveFinished = true;
 		case eTriggerClimber:
-			mDrive.setClimber(Value.kReverse);
+			mElevator.setClimber(Value.kReverse);
 			
 		}
 		if (System.currentTimeMillis() - startTime > 2500 && mObjective != AutoObjective.eCubeAssist) mIsObjectiveFinished = true;

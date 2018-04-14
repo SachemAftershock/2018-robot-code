@@ -9,6 +9,7 @@ import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -28,10 +29,11 @@ public class MagicElevator {
 	private static MagicElevator instance = new MagicElevator();
 
 	private boolean upPressed, downPressed, L3Pressed, nudgeUpPressed, nudgeDownPressed, running, ltPressed, yPressed,
-			startPressed;
+			startPressed, r3Pressed;
 	private ElevatorPosition targetLevel, elevatorLevel;
+	private VictorSPX climberVictor;
 	private TalonSRX mElevatorTalon;
-	private DoubleSolenoid tiltSolenoid;
+	private DoubleSolenoid tiltSolenoid, climberSolenoid;;
 	private DigitalOutput override;
 	private int[] encoderLevels;
 	private int currentCount;
@@ -61,6 +63,10 @@ public class MagicElevator {
 				LimitSwitchNormal.NormallyOpen, 0);
 		mElevatorTalon.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
 				LimitSwitchNormal.NormallyOpen, 0);
+		
+		climberVictor = new VictorSPX(Constants.kClimberVictor);
+		climberVictor.setNeutralMode(NeutralMode.Brake);
+		climberSolenoid = new DoubleSolenoid(0, Constants.kClimberSolFwd, Constants.kClimberSolRev);
 
 		// elevator and encoder levels
 		targetLevel = ElevatorPosition.kInitial;
@@ -81,6 +87,7 @@ public class MagicElevator {
 		ltPressed = false;
 		nudgeDownPressed = false;
 		startPressed = false;
+		r3Pressed = false;
 
 		// Manual override for kill switch
 		override = new DigitalOutput(Constants.kOverride);
@@ -148,6 +155,27 @@ public class MagicElevator {
 		if (mElevatorTalon.getSensorCollection().isRevLimitSwitchClosed()) {
 			mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
 		}
+		//System.out.println("Solenoid: " + climberSolenoid.get());
+		if (controller.getStickButton(Hand.kRight) && !r3Pressed) {
+			if (climberSolenoid.get() == Value.kOff) {
+				climberSolenoid.set(Value.kReverse);
+			} else {
+				climberSolenoid.set(climberSolenoid.get() == Value.kReverse ? Value.kForward : Value.kReverse);
+			}
+		}
+
+		if (controller.getBackButton()
+				&& deadband(-controller.getY(Hand.kRight), 0.1) != 0/* && climberSolenoid.get() == Value.kForward */) {
+			double o = deadband(-controller.getY(Hand.kRight), 0.1);
+			if (climberVictor.getOutputCurrent() > 50) {
+				o *= 0.5;
+			}
+			climberVictor.set(ControlMode.PercentOutput, o);
+		} else {
+			climberVictor.set(ControlMode.PercentOutput, 0.0);
+		}
+
+		r3Pressed = controller.getStickButton(Hand.kRight);
 
 		/*
 		if (controller.getStartButton() && !startPressed) {
@@ -205,6 +233,10 @@ public class MagicElevator {
 		if (!atTarget()) {
 			running = true;
 		}
+	}
+	
+	public void setClimber(Value value) {
+		climberSolenoid.set(value);
 	}
 
 	/**
