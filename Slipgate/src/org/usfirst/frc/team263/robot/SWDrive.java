@@ -40,7 +40,7 @@ public class SWDrive {
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
 	private Solenoid mSolenoid;
-	private boolean mIsSetpointReached;
+	private boolean mIsSetpointReached, startPressed;
 	boolean f;
 	int osci;
 
@@ -67,6 +67,7 @@ public class SWDrive {
 		mRightSetpoint = 0;
 		mTheta = 0;
 		f = false;
+		startPressed = false;
 		mVelocityRatio = 0;
 
 		// Initialize all master and slave motors.
@@ -242,6 +243,15 @@ public class SWDrive {
 	public void drive(XboxController controller) {
 		//System.out.println("Right Master: " + mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " + mLeftMaster.getSelectedSensorPosition(0));
 		
+
+		//if tilt on and angle within [thresh,45] [thresh,45] -> [.1, .4]
+		float pitch = mNavX.getPitch(); 
+		if(pitch > Constants.kTiltThresh && pitch < 45) {
+			double slope = (0.4 - 0.1) / (45 - Constants.kTiltThresh);
+			double correctOffset = slope * pitch - Constants.kTiltThresh;
+			//TODO: check for negative cases
+		}
+
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0) {
 			drive(-controller.getY(Hand.kLeft), controller.getX(Hand.kRight));
 		} else {
