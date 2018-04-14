@@ -32,16 +32,15 @@ public class SWDrive {
 	private DriveMode mPreviousDriveMode;
 	private static SWDrive mInstance = new SWDrive();
 	private TalonSRX mLeftMaster, mRightMaster;
-	private VictorSPX mLeftSlave, mRightSlave, climberVictor;
+	private VictorSPX mLeftSlave, mRightSlave;
 	private AHRS mNavX;
 	private double mLeftSetpoint, mRightSetpoint;
 	private double mTheta, mVelocityRatio;
-	private DoubleSolenoid climberSolenoid;
 	private Direction mCubeAssistDirection;
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
 	private Solenoid mSolenoid;
-	private boolean mIsSetpointReached, r3Pressed;
+	private boolean mIsSetpointReached;
 	boolean f;
 	int osci;
 
@@ -68,7 +67,6 @@ public class SWDrive {
 		mRightSetpoint = 0;
 		mTheta = 0;
 		f = false;
-		r3Pressed = false;
 		mVelocityRatio = 0;
 
 		// Initialize all master and slave motors.
@@ -95,11 +93,7 @@ public class SWDrive {
 		mRightSlave.setNeutralMode(NeutralMode.Brake);
 		mRightSlave.follow(mRightMaster);
 
-		climberVictor = new VictorSPX(Constants.kClimberVictor);
-		climberVictor.setNeutralMode(NeutralMode.Brake);
-
 		mSolenoid = new Solenoid(1, Constants.kDriveSolenoidPort);
-		climberSolenoid = new DoubleSolenoid(0, Constants.kClimberSolFwd, Constants.kClimberSolRev);
 
 		setLowGear();
 		configureClosedLoop();
@@ -254,27 +248,6 @@ public class SWDrive {
 			drive(-Constants.kDriveMultiplier * controller.getY(Hand.kLeft),
 					Constants.kDriveMultiplier * controller.getX(Hand.kRight));
 		}
-		if (controller.getStickButton(Hand.kRight) && !r3Pressed) {
-			if (climberSolenoid.get() == Value.kOff) {
-				climberSolenoid.set(Value.kReverse);
-			} else {
-				climberSolenoid.set(climberSolenoid.get() == Value.kForward ? Value.kReverse : Value.kForward);
-			}
-		}
-
-		if (controller.getBackButton()
-				&& deadband(-controller.getY(Hand.kRight), 0.1) != 0/* && climberSolenoid.get() == Value.kForward */) {
-			double o = deadband(-controller.getY(Hand.kRight), 0.1);
-			if (climberVictor.getOutputCurrent() > 50) {
-				o *= 0.5;
-			}
-			climberVictor.set(ControlMode.PercentOutput, o);
-		} else {
-			climberVictor.set(ControlMode.PercentOutput, 0.0);
-		}
-		// 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263 263
-
-		r3Pressed = controller.getStickButton(Hand.kRight);
 	}
 
 	/**
@@ -298,10 +271,6 @@ public class SWDrive {
 	 */
 	public void setOpenLoop() {
 		mDriveMode = DriveMode.eOpenLoop;
-	}
-
-	public void setClimber(Value value) {
-		climberSolenoid.set(value);
 	}
 
 	public double getYaw() {

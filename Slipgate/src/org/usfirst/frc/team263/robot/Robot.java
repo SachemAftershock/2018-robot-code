@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import java.util.Arrays;
 
 import org.usfirst.frc.team263.robot.Enums.AutoObjective;
+import org.usfirst.frc.team263.robot.Enums.CIMode;
 import org.usfirst.frc.team263.robot.Enums.Direction;
 import org.usfirst.frc.team263.robot.Enums.LEDMode;
 import org.usfirst.frc.team263.robot.Limelight.CameraMode;
@@ -27,20 +28,23 @@ public class Robot extends TimedRobot {
 	Compressor compressor;
 	DigitalInput leftJumper, centerJumper, rightJumper;
 	boolean left, center, right;
-	
+	boolean hasTest;
+
 	@Override
 	public void robotInit() {
 		System.loadLibrary("ProfileGeneratorJNI");
 		leftJumper = new DigitalInput(5);
 		centerJumper = new DigitalInput(6);
 		rightJumper = new DigitalInput(7);
-		
-		left = false;//!leftJumper.get();
-		center = true;//!centerJumper.get();
-		right = false;//!rightJumper.get();
-		
+
+		left = false;// !leftJumper.get();
+		center = true;// !centerJumper.get();
+		right = false;// !rightJumper.get();
+
+		hasTest = false;
+
 		System.out.println("Left: " + left + " | Center: " + center + " | Right: " + right);
-		
+
 		pDriver = new XboxController(0);
 		sDriver = new XboxController(1);
 		intake = CubeIntake.getInstance();
@@ -51,7 +55,7 @@ public class Robot extends TimedRobot {
 
 		logger = new Logger();
 	}
-	
+
 	@Override
 	public void teleopInit() {
 		logger.write("Entering Teleoperated Mode", true);
@@ -82,8 +86,8 @@ public class Robot extends TimedRobot {
 			LEDStrip.sendColor(LEDMode.eBlink);
 			drive.setLowGear();
 		}
-		
-		if(RobotController.isBrownedOut()) {
+
+		if (RobotController.isBrownedOut()) {
 			LEDStrip.sendColor(LEDMode.eBlink);
 		}
 
@@ -105,7 +109,7 @@ public class Robot extends TimedRobot {
 		drive.zeroGyro();
 		autonomous.clearQueue();
 		LEDStrip.sendColor(LEDMode.eRainbow);
-		
+
 		char c1 = 'q';
 		char c2 = 'q';
 		while (c1 == 'q') {
@@ -113,13 +117,7 @@ public class Robot extends TimedRobot {
 			c2 = DriverStation.getInstance().getGameSpecificMessage().charAt(1);
 		}
 		autonomous.queueObjective(AutoObjective.eTriggerClimber, 0);
-		/*if (c2 == 'L' && left) {
-			autonomous.queueObjective(AutoObjective.eForward, 240);
-			autonomous.queueObjective(AutoObjective.eRotate, 45);
-			autonomous.queueObjective(AutoObjective.eElevatorLevel, 6);
-			autonomous.queueObjective(AutoObjective.eEjectCube, 0);
-			autonomous.queueObjective(AutoObjective.eNothing, 0);
-		} else */if (c1 == 'L' && left) {
+		if (c1 == 'L' && left) {
 			System.out.println("THINGY");
 			autonomous.queueObjective(AutoObjective.eForward, 135);
 			autonomous.queueObjective(AutoObjective.eRotate, 90);
@@ -143,7 +141,7 @@ public class Robot extends TimedRobot {
 				autonomous.queueObjective(AutoObjective.eForward, 45);
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
 				autonomous.queueObjective(AutoObjective.eRotate, -90);
-				//autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
+				// autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
 				autonomous.queueObjective(AutoObjective.eOpenArm, 0);
 				autonomous.queueObjective(AutoObjective.eForward, 15);
 				autonomous.queueObjective(AutoObjective.eIntake, 0);
@@ -154,7 +152,7 @@ public class Robot extends TimedRobot {
 				autonomous.queueObjective(AutoObjective.eForward, 45);
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
 				autonomous.queueObjective(AutoObjective.eRotate, 90);
-				//autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
+				// autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
 				autonomous.queueObjective(AutoObjective.eOpenArm, 0);
 				autonomous.queueObjective(AutoObjective.eForward, 15);
 				autonomous.queueObjective(AutoObjective.eIntake, 0);
@@ -171,32 +169,13 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
-		/*
-		drive.zeroGyro();
-		//drive.setLinearDistance(50);
-		drive.setRotationTheta(90);
-		try {
-			double[] x = ProfileGeneratorJNI.createNewProfile(10, 500, 1000, 200, 40000);
-			System.out.println(Arrays.toString(x));
-		} catch (UnsatisfiedLinkError e) {
-			System.err.println(e.getMessage());
-		}
-		*/
 		drive.zeroGyro();
 		autonomous.clearQueue();
-		
+
 	}
 
 	@Override
 	public void testPeriodic() {
-		//drive.drive();
-		//System.out.println("Yaw: "  + drive.getYaw() + ", PID: " + drive.getPid());
-		//Timer.delay(0.5);
-		//autonomous.drive();
-		LEDStrip.sendColor(LEDMode.eBlue);
-		if(pDriver.getAButton()) {
-			System.out.println("HErro");
-			LEDStrip.sendColor(LEDMode.eExpel);
-		}
+		
 	}
 }
