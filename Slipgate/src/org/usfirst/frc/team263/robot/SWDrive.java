@@ -41,6 +41,7 @@ public class SWDrive {
 	private GearingMode mPreviousGearingMode;
 	private Solenoid mSolenoid;
 	private boolean mIsSetpointReached;
+	private MagicElevator mElev;
 	boolean f;
 	int osci;
 
@@ -104,6 +105,8 @@ public class SWDrive {
 		mNavX = new AHRS(SPI.Port.kMXP);
 		Timer.delay(1);
 		System.out.println("NavX calibration: " + mNavX.isCalibrating());
+		
+		mElev = MagicElevator.getInstance();
 	}
 
 	/**
@@ -117,10 +120,31 @@ public class SWDrive {
 	public void drive(double leftY, double rightX) {
 		synchronized (this) {
 			if (mDriveMode == DriveMode.eOpenLoop) {
+				// Determine normal inputs
 				double leftOutput = deadband(leftY, 0.1)
 						+ Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
 				double rightOutput = deadband(leftY, 0.1)
 						- Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
+				
+				// Create logs of previous outputs for acceleration purposes
+				// Report proposed acceleration as zero if elevator is low
+				double leftOutputPrev = 0, rightOutputPrev = 0;
+				if (mElev.getHeight() > Constants.kAccelLimHeight) {
+					leftOutputPrev = mLeftMaster.getMotorOutputPercent();
+					rightOutputPrev = mRightMaster.getMotorOutputPercent();
+				} else {
+					leftOutputPrev = leftOutput;
+					rightOutputPrev = rightOutput;
+				}
+				
+				
+				// Limit acceleration per loop
+				if (Math.abs(leftOutput - leftOutputPrev) > Constants.kAccelPercentPerLoop) {
+					leftOutput += Math.signum(leftOutput) * Constants.kAccelPercentPerLoop;
+				}
+				if (Math.abs(rightOutput - rightOutputPrev) > Constants.kAccelPercentPerLoop) {
+					rightOutput += Math.signum(rightOutput) * Constants.kAccelPercentPerLoop;
+				}			
 
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);

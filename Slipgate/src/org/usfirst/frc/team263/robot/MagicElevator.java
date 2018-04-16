@@ -219,6 +219,10 @@ public class MagicElevator {
 	private int getDelta(ElevatorPosition position) {
 		return Math.abs(currentCount - encoderLevels[position.ordinal()]);
 	}
+	
+	public double getHeight() {
+		return mElevatorTalon.getSelectedSensorPosition(0) / encoderLevels[6];
+	}
 
 	private boolean atTarget() {
 		return elevatorLevel == targetLevel && getDelta(elevatorLevel) < Constants.kElevatorThreshhold;

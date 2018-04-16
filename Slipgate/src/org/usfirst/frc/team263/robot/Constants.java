@@ -25,6 +25,8 @@ public class Constants {
 	final static double[] kCubeSeekSpeed = { 0.60, 0.45 };
 	final static double kDriveWheelLength = 23.5;
 	final static double kDriveMultiplier = 0.25;
+	final static double kAccelPercentPerLoop = 0.0025;
+	final static double kAccelLimHeight = 0.5;
 
 	// Rotational PID Constants
 	final static double[] kDriveRKp = { 0.010, 0.003 };
