@@ -241,22 +241,27 @@ public class SWDrive {
 	 *            Primary driver's controller.
 	 */
 	public void drive(XboxController controller) {
-		//System.out.println("Right Master: " + mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " + mLeftMaster.getSelectedSensorPosition(0));
-		
+		// System.out.println("Right Master: " +
+		// mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " +
+		// mLeftMaster.getSelectedSensorPosition(0));
+		double leftStick = -controller.getY(Hand.kLeft);
+		double rightStick = controller.getX(Hand.kRight);
 
-		//if tilt on and angle within [thresh,45] [thresh,45] -> [.1, .4]
-		float pitch = mNavX.getPitch(); 
-		if(pitch > Constants.kTiltThresh && pitch < 45) {
+		// if tilt on and angle within [thresh,45] [thresh,45] -> [.1, .4]
+		float pitch = mNavX.getPitch();
+		if (pitch > Constants.kTiltThresh && pitch < 45) {
 			double slope = (0.4 - 0.1) / (45 - Constants.kTiltThresh);
-			double correctOffset = slope * pitch - Constants.kTiltThresh;
-			//TODO: check for negative cases
+			double correctionOffset = slope * pitch - Constants.kTiltThresh;
+			double[] tmp = { leftStick + correctionOffset, rightStick + correctionOffset };
+			normalize(tmp);
+			leftStick = tmp[0];
+			rightStick = tmp[1];
 		}
 
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0) {
-			drive(-controller.getY(Hand.kLeft), controller.getX(Hand.kRight));
+			drive(leftStick, rightStick);
 		} else {
-			drive(-Constants.kDriveMultiplier * controller.getY(Hand.kLeft),
-					Constants.kDriveMultiplier * controller.getX(Hand.kRight));
+			drive(-Constants.kDriveMultiplier * leftStick, Constants.kDriveMultiplier * rightStick);
 		}
 	}
 
