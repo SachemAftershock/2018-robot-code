@@ -42,6 +42,7 @@ public class SWDrive {
 	private Solenoid mSolenoid;
 	private boolean mIsSetpointReached;
 	private MagicElevator mElev;
+	private double leftOutputPrev, rightOutputPrev;
 	boolean f;
 	int osci;
 
@@ -128,11 +129,7 @@ public class SWDrive {
 				
 				// Create logs of previous outputs for acceleration purposes
 				// Report proposed acceleration as zero if elevator is low
-				double leftOutputPrev = 0, rightOutputPrev = 0;
-				if (mElev.getHeight() > Constants.kAccelLimHeight) {
-					leftOutputPrev = mLeftMaster.getMotorOutputPercent();
-					rightOutputPrev = mRightMaster.getMotorOutputPercent();
-				} else {
+				if (mElev.getHeight() < Constants.kAccelLimHeight) {
 					leftOutputPrev = leftOutput;
 					rightOutputPrev = rightOutput;
 				}
@@ -140,17 +137,20 @@ public class SWDrive {
 				
 				// Limit acceleration per loop
 				if (Math.abs(leftOutput - leftOutputPrev) > Constants.kAccelPercentPerLoop) {
-					leftOutput += Math.signum(leftOutput) * Constants.kAccelPercentPerLoop;
+					leftOutput =  leftOutputPrev + Math.signum(leftOutput - leftOutputPrev) * Constants.kAccelPercentPerLoop;
 				}
 				if (Math.abs(rightOutput - rightOutputPrev) > Constants.kAccelPercentPerLoop) {
-					rightOutput += Math.signum(rightOutput) * Constants.kAccelPercentPerLoop;
+					rightOutput = rightOutputPrev + Math.signum(rightOutput - rightOutputPrev) * Constants.kAccelPercentPerLoop;
 				}			
-
+				
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
 
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
+				
+				leftOutputPrev = leftOutput;
+				rightOutputPrev = rightOutput;
 
 				mIsSetpointReached = true;
 			} else if (mDriveMode == DriveMode.eRotational) {
