@@ -40,9 +40,9 @@ public class SWDrive {
 	private static GearingMode mGearingMode;
 	private GearingMode mPreviousGearingMode;
 	private Solenoid mSolenoid;
-	private boolean mIsSetpointReached;
 	private MagicElevator mElev;
 	private double leftOutputPrev, rightOutputPrev;
+	private boolean mIsSetpointReached, startPressed;
 	boolean f;
 	int osci;
 
@@ -69,6 +69,7 @@ public class SWDrive {
 		mRightSetpoint = 0;
 		mTheta = 0;
 		f = false;
+		startPressed = false;
 		mVelocityRatio = 0;
 
 		// Initialize all master and slave motors.
@@ -264,13 +265,31 @@ public class SWDrive {
 	 *            Primary driver's controller.
 	 */
 	public void drive(XboxController controller) {
-		//System.out.println("Right Master: " + mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " + mLeftMaster.getSelectedSensorPosition(0));
+		// System.out.println("Right Master: " +
+		// mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " +
+		// mLeftMaster.getSelectedSensorPosition(0));
+		double leftStick = -controller.getY(Hand.kLeft);
+		double rightStick = controller.getX(Hand.kRight);
+
+		// if tilt on and angle within [thresh,45] [thresh,45] -> [.1, .4]
 		
+		//TODO: check if this should be absolute valued
+		//			- i remember it working in gym but logically seems incorrect
+		//			- should only the comparison be absolute valued?
+		float pitch = Math.abs(mNavX.getPitch());
+		if (pitch > Constants.kTiltThresh && pitch < 45) {
+			double slope = (0.4 - 0.1) / (45 - Constants.kTiltThresh);
+			double correctionOffset = slope * pitch - Constants.kTiltThresh;
+			double[] tmp = { leftStick + correctionOffset, rightStick + correctionOffset };
+			normalize(tmp);
+			leftStick = tmp[0];
+			rightStick = tmp[1];
+		}
+
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0) {
-			drive(-controller.getY(Hand.kLeft), controller.getX(Hand.kRight));
+			drive(leftStick, rightStick);
 		} else {
-			drive(-Constants.kDriveMultiplier * controller.getY(Hand.kLeft),
-					Constants.kDriveMultiplier * controller.getX(Hand.kRight));
+			drive(-Constants.kDriveMultiplier * leftStick, Constants.kDriveMultiplier * rightStick);
 		}
 	}
 

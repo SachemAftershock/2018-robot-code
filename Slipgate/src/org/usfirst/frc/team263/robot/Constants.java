@@ -89,4 +89,6 @@ public class Constants {
 	final static int kClimberSolFwd = 2;
 	final static int kClimberSolRev = 5;
 	final static int kClimberVictor = 0;
+	
+	final static int kTiltThresh = 15;
 }
