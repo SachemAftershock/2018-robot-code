@@ -248,7 +248,11 @@ public class SWDrive {
 		double rightStick = controller.getX(Hand.kRight);
 
 		// if tilt on and angle within [thresh,45] [thresh,45] -> [.1, .4]
-		float pitch = mNavX.getPitch();
+		
+		//TODO: check if this should be absolute valued
+		//			- i remember it working in gym but logically seems incorrect
+		//			- should only the comparison be absolute valued?
+		float pitch = Math.abs(mNavX.getPitch());
 		if (pitch > Constants.kTiltThresh && pitch < 45) {
 			double slope = (0.4 - 0.1) / (45 - Constants.kTiltThresh);
 			double correctionOffset = slope * pitch - Constants.kTiltThresh;
