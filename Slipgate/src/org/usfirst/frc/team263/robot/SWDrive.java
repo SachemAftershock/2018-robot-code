@@ -265,9 +265,7 @@ public class SWDrive {
 	 *            Primary driver's controller.
 	 */
 	public void drive(XboxController controller) {
-		// System.out.println("Right Master: " +
-		// mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " +
-		// mLeftMaster.getSelectedSensorPosition(0));
+		 System.out.println("Right Master: " + mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " +mLeftMaster.getSelectedSensorPosition(0));
 		double leftStick = -controller.getY(Hand.kLeft);
 		double rightStick = controller.getX(Hand.kRight);
 

@@ -13,7 +13,7 @@ public class Constants {
 
 	// Drivebase constants
 	final static double[] kTurningConstant = { 0.5, 0.5 };
-	final static double[] kDriveKp = { 0.25, 0.00 };
+	final static double[] kDriveKp = { 0.375 /*0.25*/, 0.00 };
 	final static double[] kDriveKi = { 0.00, 0.00 };
 	final static double[] kDriveKd = { 3.0, 0.00 };
 	final static double[] kDriveKf = { 0.00, 0.00 };
@@ -75,7 +75,7 @@ public class Constants {
 	final static double kDistancePerRotationInches = 5.5;
 	final static double kElevatorRotationsPerInch = kElevatorUnitsPerRotation / kDistancePerRotationInches;
 	final static int kElevatorThreshhold = 10;
-	final static int kInitialCount = 4250;
+	final static int kInitialCount = 2420;
 	final static int kMinBufferSize = 10;
 	final static double kItp = 10;
 	final static double kT1 = 200;

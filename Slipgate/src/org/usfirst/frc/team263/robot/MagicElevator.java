@@ -46,11 +46,12 @@ public class MagicElevator {
 		mElevatorTalon = new TalonSRX(Constants.kElevatorTalon);
 		mElevatorTalon.setNeutralMode(NeutralMode.Brake);
 		mElevatorTalon.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-		mElevatorTalon.setSensorPhase(true);
-		mElevatorTalon.config_kP(0, 10.0, 0);
+		mElevatorTalon.setSensorPhase(false);
+		mElevatorTalon.config_kP(0, 3.0, 0);
 		mElevatorTalon.config_kI(0, 0.0, 0);
 		mElevatorTalon.config_kD(0, 0.0, 0);
 		mElevatorTalon.config_kF(0, 0.0, 0);
+		mElevatorTalon.setInverted(true);
 		mElevatorTalon.configMotionAcceleration(1000, 0);
 		mElevatorTalon.configMotionCruiseVelocity(5000, 0);
 		mElevatorTalon.config_IntegralZone(0, 200, 0);
@@ -74,7 +75,7 @@ public class MagicElevator {
 
 		// TODO: replace with actual values taken from open-loop control on elevator
 		// elevator { reserved, ground, vault, switch, minScale, midScale, maxScale }
-		encoderLevels = new int[] { -1, 0, 460, 3400, 8000, 10000, 11000 };
+		encoderLevels = new int[] { -1, 0, 263, 1410, 4000, 4650, 5100 };
 		tiltSolenoid = new DoubleSolenoid(0, Constants.kElevatorSolFwd, Constants.kElevatorSolRev);
 		currentCount = Constants.kInitialCount;
 
@@ -110,43 +111,38 @@ public class MagicElevator {
 	 */
 	public void drive(XboxController controller) {
 		currentCount = mElevatorTalon.getSelectedSensorPosition(0);
-		
+		System.out.println("ElevatorEncoder: " + currentCount);
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0) {
 			mElevatorTalon.set(ControlMode.PercentOutput, deadband(-controller.getY(Hand.kLeft), 0.1));
+		} else if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && ltPressed && !running) {
+			mElevatorTalon.set(ControlMode.PercentOutput, 0.1);
+		} else {
+			if (controller.getBumper(Hand.kRight) && !upPressed) {
+				targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
+			} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
+				targetLevel = ElevatorPosition.values()[Math.max(targetLevel.ordinal() - 1, 1)];
+			} else if (controller.getBumper(Hand.kLeft) && controller.getBumper(Hand.kRight)) {
+				clearEverything();
+				targetLevel = elevatorLevel;
+			} else if (controller.getPOV() == 0 && !nudgeUpPressed) {
+				encoderLevels[elevatorLevel.ordinal()] += 20;
+				executeHead();
+			} else if (controller.getPOV() == 180 && !nudgeDownPressed) {
+				encoderLevels[elevatorLevel.ordinal()] -= 20;
+				executeHead();
+			} else if (controller.getStickButton(Hand.kLeft) && !L3Pressed) {
+				executeHead();
+			}
+			if (running && !atTarget()) {
+				mElevatorTalon.set(ControlMode.MotionMagic, encoderLevels[targetLevel.ordinal()]);
+			}
 		}
-		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && ltPressed && !running) {
-			mElevatorTalon.set(ControlMode.PercentOutput, 0.05);
-		}
-		
-		/*
-		if (controller.getBumper(Hand.kRight) && !upPressed) {
-			targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
-		} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
-			targetLevel = ElevatorPosition.values()[Math.max(targetLevel.ordinal() - 1, 1)];
-		} else if (controller.getBumper(Hand.kLeft) && controller.getBumper(Hand.kRight)) {
-			clearEverything();
-			targetLevel = elevatorLevel;
-		} else if (controller.getPOV() == 0 && !nudgeUpPressed) {
-			encoderLevels[elevatorLevel.ordinal()] += 20;
-			executeHead();
-		} else if (controller.getPOV() == 180 && !nudgeDownPressed) {
-			encoderLevels[elevatorLevel.ordinal()] -= 20;
-			executeHead();
-		} else if (controller.getStickButton(Hand.kLeft) && !L3Pressed) {
-			executeHead();
-		}
-		
-		
-
+			
+	
 		if (controller.getStartButton()) {
 			override.set(true);
 			LEDStrip.sendColor(LEDMode.eBlink);
 		}
-
-		if (running && !atTarget()) {
-			mElevatorTalon.set(ControlMode.MotionMagic, encoderLevels[targetLevel.ordinal()]);
-		}
-		*/
 
 		if (controller.getYButton() && !yPressed) {
 			tiltSolenoid.set(tiltSolenoid.get() == Value.kForward ? Value.kReverse : Value.kForward);
@@ -176,6 +172,7 @@ public class MagicElevator {
 		}
 
 		r3Pressed = controller.getStickButton(Hand.kRight);
+			
 
 		/*
 		if (controller.getStartButton() && !startPressed) {
