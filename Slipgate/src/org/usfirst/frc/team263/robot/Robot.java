@@ -108,6 +108,7 @@ public class Robot extends TimedRobot {
 		Limelight.setCameraMode(CameraMode.eVision);
 		logger.write("Entering Autonomous Mode", true);
 		drive.zeroGyro();
+		elevator.initEncoder();
 		autonomous.clearQueue();
 		LEDStrip.sendColor(LEDMode.eRainbow);
 
@@ -142,15 +143,18 @@ public class Robot extends TimedRobot {
 				autonomous.queueObjective(AutoObjective.eForward, 45);
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
 				autonomous.queueObjective(AutoObjective.eRotate, -90);
-				autonomous.queueObjective(AutoObjective.eElevatorLevel, 3);
+				autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);//autonomous.queueObjective(AutoObjective.eElevatorLevel, 3);
 				autonomous.queueObjective(AutoObjective.eOpenArm, 0);
-				autonomous.queueObjective(AutoObjective.eForward, 15);
 				autonomous.queueObjective(AutoObjective.eIntake, 0);
+				autonomous.queueObjective(AutoObjective.eForward, 35);
+				autonomous.queueObjective(AutoObjective.eClose, 35);
 				autonomous.queueObjective(AutoObjective.eForward, -15);
 				autonomous.queueObjective(AutoObjective.eRotate, 0);
-				autonomous.queueObjective(AutoObjective.eElevatorLevel, 4);
+				autonomous.queueObjective(AutoObjective.eElevatorLevel, 3);
 				autonomous.queueObjective(AutoObjective.eForward, 5);
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+				autonomous.queueObjective(AutoObjective.eForward, -10);
+				autonomous.queueObjective(AutoObjective.eZeroElevator, 0);
 				autonomous.queueObjective(AutoObjective.eNothing, 0);
 
 			} else {
@@ -160,7 +164,7 @@ public class Robot extends TimedRobot {
 				autonomous.queueObjective(AutoObjective.eForward, 45);
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
 				autonomous.queueObjective(AutoObjective.eRotate, 90);
-				autonomous.queueObjective(AutoObjective.eElevatorLevel, 3);
+				autonomous.queueObjective(AutoObjective.eZeroElevator, 0);//autonomous.queueObjective(AutoObjective.eElevatorLevel, 3);
 				autonomous.queueObjective(AutoObjective.eOpenArm, 0);
 				autonomous.queueObjective(AutoObjective.eForward, 15);
 				autonomous.queueObjective(AutoObjective.eIntake, 0);
@@ -169,6 +173,8 @@ public class Robot extends TimedRobot {
 				autonomous.queueObjective(AutoObjective.eElevatorLevel, 4);
 				autonomous.queueObjective(AutoObjective.eForward, 5);
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+				autonomous.queueObjective(AutoObjective.eForward, -10);
+				autonomous.queueObjective(AutoObjective.eZeroElevator, 0);
 				autonomous.queueObjective(AutoObjective.eNothing, 0);
 			}
 		} else if (left && c2 == 'L') {

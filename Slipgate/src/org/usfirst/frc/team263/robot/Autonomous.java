@@ -108,14 +108,21 @@ public class Autonomous {
 			mElevator.drive();
 			mDrive.drive();
 			mIsObjectiveFinished = mDrive.isSetpointReached() && mElevator.isFinished();
+			break;
 		case eOpenArm:
 			mIntake.autonOpenArm();
 			mIsObjectiveFinished = true;
+			break;
 		case eIntake:
 			mIntake.autonIntake();
 			mIsObjectiveFinished = true;
+			break;
+		case eZeroElevator:
+			mIsObjectiveFinished = mElevator.zeroLevel();
+			break;
 		case eTriggerClimber:
 			mElevator.setClimber(Value.kReverse);
+			break;
 			
 		}
 		if (System.currentTimeMillis() - startTime > 2500 && mObjective != AutoObjective.eCubeAssist) mIsObjectiveFinished = true;
