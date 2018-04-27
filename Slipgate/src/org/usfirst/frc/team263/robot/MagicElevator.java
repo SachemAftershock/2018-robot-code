@@ -58,7 +58,7 @@ public class MagicElevator {
 		mElevatorTalon.configClosedloopRamp(0, 256);
 		mElevatorTalon.configOpenloopRamp(0, 256);
 		mElevatorTalon.configAllowableClosedloopError(0, Constants.kElevatorThreshhold, 0);
-		mElevatorTalon.setSelectedSensorPosition(0, Constants.kInitialCount, 0); // TODO: CHECK DOCUMENTATION
+		mElevatorTalon.setSelectedSensorPosition(Constants.kInitialCount, 0, 0); // TODO: CHECK DOCUMENTATION
 
 		mElevatorTalon.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
 				LimitSwitchNormal.NormallyOpen, 0);
@@ -184,7 +184,7 @@ public class MagicElevator {
 			for (ElevatorPosition el : ElevatorPosition.values()) {
 				if (getDelta(el) < Constants.kElevatorThreshhold) {
 					elevatorLevel = el;
-					running = false;
+					attaralse;
 				}
 			}
 		}

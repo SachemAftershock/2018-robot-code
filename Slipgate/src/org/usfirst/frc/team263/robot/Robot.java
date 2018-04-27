@@ -118,28 +118,21 @@ public class Robot extends TimedRobot {
 			c2 = DriverStation.getInstance().getGameSpecificMessage().charAt(1);
 		}
 		autonomous.queueObjective(AutoObjective.eTriggerClimber, 0);
-		if (c1 == 'L' && left) {
-			if (doSwitch) {
-				autonomous.queueObjective(AutoObjective.eForward, 135);
-				autonomous.queueObjective(AutoObjective.eRotate, 90);
-				autonomous.queueObjective(AutoObjective.eForward, 10);
-				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
-				autonomous.queueObjective(AutoObjective.eRotate, 0);
-				autonomous.queueObjective(AutoObjective.eNothing, 0);
-			} else {
-				autonomous.queueObjective(AutoObjective.eForward, setpoint);
-			}
-		} else if (c1 == 'R' && right) {
-			if (doSwitch) {
-				autonomous.queueObjective(AutoObjective.eForward, 135);
-				autonomous.queueObjective(AutoObjective.eRotate, -90);
-				autonomous.queueObjective(AutoObjective.eForward, 10);
-				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
-				autonomous.queueObjective(AutoObjective.eRotate, 0);
-				autonomous.queueObjective(AutoObjective.eNothing, 0);
-			} else {
-				autonomous.queueObjective(AutoObjective.eForward, setpoint);
-			}
+		if (c1 == 'L' && left && doSwitch) {
+			autonomous.queueObjective(AutoObjective.eForward, 135);
+			autonomous.queueObjective(AutoObjective.eRotate, 90);
+			autonomous.queueObjective(AutoObjective.eForward, 10);
+			autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+			autonomous.queueObjective(AutoObjective.eRotate, 0);
+			autonomous.queueObjective(AutoObjective.eNothing, 0);
+		} else if (c1 == 'R' && right && doSwitch) {
+			autonomous.queueObjective(AutoObjective.eForward, 135);
+			autonomous.queueObjective(AutoObjective.eRotate, -90);
+			autonomous.queueObjective(AutoObjective.eForward, 10);
+			autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+			autonomous.queueObjective(AutoObjective.eRotate, 0);
+			autonomous.queueObjective(AutoObjective.eNothing, 0);
+
 		} else if (center) {
 			autonomous.queueObjective(AutoObjective.eForward, 30);
 			if (c1 == 'R') {
@@ -159,7 +152,7 @@ public class Robot extends TimedRobot {
 				autonomous.queueObjective(AutoObjective.eForward, 5);
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
 				autonomous.queueObjective(AutoObjective.eNothing, 0);
-				
+
 			} else {
 				autonomous.queueObjective(AutoObjective.eRotate, -60);
 				autonomous.queueObjective(AutoObjective.eForward, 50);
@@ -178,6 +171,22 @@ public class Robot extends TimedRobot {
 				autonomous.queueObjective(AutoObjective.eEjectCube, 0);
 				autonomous.queueObjective(AutoObjective.eNothing, 0);
 			}
+		} else if (left && c2 == 'L') {
+			/*
+			autonomous.queueObjective(AutoObjective.eForward, 240);
+			autonomous.queueObjective(AutoObjective.eElevatorLevel, 6);
+			autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+			autonomous.queueObjective(AutoObjective.eForward, -5);
+			autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
+			*/
+		} else if (right && c2 == 'R') {
+			/*
+			autonomous.queueObjective(AutoObjective.eForward, 240);
+			autonomous.queueObjective(AutoObjective.eElevatorLevel, 6);
+			autonomous.queueObjective(AutoObjective.eEjectCube, 0);
+			autonomous.queueObjective(AutoObjective.eForward, -5);
+			autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
+			*/
 		} else {
 			autonomous.queueObjective(AutoObjective.eForward, 135);
 		}
@@ -190,13 +199,16 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
-		drive.zeroGyro();
 		autonomous.clearQueue();
-
+		autonomous.queueObjective(AutoObjective.eElevatorLevel, 4);
+		Timer.delay(1);
+		autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
+		Timer.delay(1);
+		autonomous.queueObjective(AutoObjective.eElevatorLevel, 3);
 	}
 
 	@Override
 	public void testPeriodic() {
-		
+		autonomous.drive();
 	}
 }

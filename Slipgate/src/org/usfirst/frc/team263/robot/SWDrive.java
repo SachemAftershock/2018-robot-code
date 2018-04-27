@@ -128,6 +128,7 @@ public class SWDrive {
 				double rightOutput = deadband(leftY, 0.1)
 						- Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
 				
+				
 				// Create logs of previous outputs for acceleration purposes
 				// Report proposed acceleration as zero if elevator is low
 				if (mElev.getHeight() < Constants.kAccelLimHeight) {
