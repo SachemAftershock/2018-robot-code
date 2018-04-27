@@ -199,16 +199,105 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void testInit() {
+		drive.zeroGyro();
 		autonomous.clearQueue();
-		autonomous.queueObjective(AutoObjective.eElevatorLevel, 4);
-		Timer.delay(1);
-		autonomous.queueObjective(AutoObjective.eElevatorLevel, 1);
-		Timer.delay(1);
-		autonomous.queueObjective(AutoObjective.eElevatorLevel, 3);
+
+
 	}
 
 	@Override
 	public void testPeriodic() {
-		autonomous.drive();
+		  ////////////////////
+		 //// Drivebase /////
+		////////////////////
+		drive.zeroEncoders();
+		
+		for (int i = 250; i > 1; i--) {
+			drive.drive(/*1.0 / i, 1.0 / i*/ 0.5, 0.5);
+			Timer.delay(1.0 / 50.0);
+		}
+		
+		drive.drive(0f,0f);
+		
+		Timer.delay(0.5);
+		
+		if(Math.abs(drive.getEncoders()[0]) < 500 || Math.abs(drive.getEncoders()[1]) < 500) {
+			//System.out.println("Encoders: " + Arrays.toString(drive.getEncoders()));
+			DriverStation.reportError("Encoders did not change!", false);
+		}
+		
+		for (int i = 250; i > 1; i--) {
+			//System.out.println("Encoders: " + Arrays.toString(drive.getEncoders()));
+			drive.drive(/*-1.0 / i, -1.0 / i*/ -0.5, -0.5);
+			Timer.delay(1.0 / 50.0);
+		}
+		
+		drive.drive(0f,0f);
+		
+		Timer.delay(0.5);
+		
+		if (Math.abs(drive.getEncoders()[0] - drive.getEncoders()[1]) > 500) {
+			//System.out.println("Encoders: " + Arrays.toString(drive.getEncoders()));
+			//DriverStation.reportError("Left and right encoders do not match!", false);
+			//TODO: fix...
+		}
+		
+		if (Math.abs(drive.getEncoders()[0]) > 500 || Math.abs(drive.getEncoders()[1]) > 500) {
+			//System.out.println("Encoders: " + Arrays.toString(drive.getEncoders()));
+			DriverStation.reportError("Encoders did not zero", false);
+		}
+		
+		  /////////////////////
+		 ////// Intake ///////
+		/////////////////////
+		intake.drive(CIMode.eIn);
+		Timer.delay(1);
+		intake.drive(CIMode.eShoot);
+		Timer.delay(1);
+		intake.drive(CIMode.eStandby);
+		System.out.println("Please verify the intake motors moved inwards then backwards.");
+		while (!pDriver.getYButton()) {
+			continue;
+		}
+		
+		
+		  /////////////////////
+		 ///// Elevator //////
+		/////////////////////
+		elevator.zeroEncoder();
+		elevator.test(0.5);
+		if (Math.abs(elevator.getEncoder()) < 250) {
+			DriverStation.reportError("Elevator encoder did not work!", false);
+		}
+
+		/////////////////////
+		//// Pneumatics /////
+		/////////////////////
+		elevator.toggleSolenoid();
+		System.out.println("Please verify that elevator piston toggled");
+		while (!pDriver.getYButton()) {
+			continue;
+		}
+		
+		elevator.toggleClimberSolenoid();
+		System.out.println("Please verify that climber piston pushed out");
+		while (!pDriver.getYButton()) {
+			continue;
+		}
+		
+		intake.drive(CIMode.eDrop);
+		System.out.println("Please verify that intake toggled");
+		while (!pDriver.getYButton()) {
+			continue;
+		}
+		
+		
+		//elevator.toggleClimberSolenoid(); //TODO: toggleClimberSolenoid only goes one way
+		
+		//puts robot back to start posiiton
+		elevator.toggleSolenoid();
+		intake.drive(CIMode.eDrop); //drop = toggle
+		
+		System.out.println("Health check complete!");
 	}
 }
