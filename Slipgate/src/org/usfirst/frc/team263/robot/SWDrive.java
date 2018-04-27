@@ -263,6 +263,10 @@ public class SWDrive {
 		mLeftMaster.setSelectedSensorPosition(0, 0, 0);
 		mRightMaster.setSelectedSensorPosition(0, 0, 0);
 	}
+	
+	public double[] getEncoders() {
+		return new double[] {mLeftMaster.getSelectedSensorPosition(0), mRightMaster.getSelectedSensorPosition(0)};
+	}
 
 	/**
 	 * Method to drive robot given controller of primary driver.
