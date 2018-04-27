@@ -78,7 +78,7 @@ public class MagicElevator {
 
 		// TODO: replace with actual values taken from open-loop control on elevator
 		// elevator { reserved, ground, vault, switch, minScale, midScale, maxScale }
-		encoderLevels = new int[] { -1, 0, 263, 1410, 4000, 4650, 5100 };
+		encoderLevels = new int[] { -1, 0, 263, /*1410*/ 2000, 4000, 4650, 5100 };
 		tiltSolenoid = new DoubleSolenoid(0, Constants.kElevatorSolFwd, Constants.kElevatorSolRev);
 		currentCount = Constants.kInitialCount;
 
@@ -121,7 +121,7 @@ public class MagicElevator {
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0) {
 			mElevatorTalon.set(ControlMode.PercentOutput, deadband(-controller.getY(Hand.kLeft), 0.1));
 			timeSinceMotorCommand = 0;
-		} else if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && ltPressed && !running) {
+		} else if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && !running) {
 			mElevatorTalon.set(ControlMode.PercentOutput, 0.1);
 			timeSinceMotorCommand = 0;
 		} else {
@@ -142,9 +142,9 @@ public class MagicElevator {
 				executeHead();
 			}
 			
-			if (timeSinceMotorCommand > 100 && !atTarget() && Math.abs(previous - mElevatorTalon.getSelectedSensorPosition(0)) < 10) {
+			if (timeSinceMotorCommand < 100 && Math.abs(previous - mElevatorTalon.getSelectedSensorPosition(0)) < 10 && encoderHealthy) {
 				encoderHealthy = false;
-				DriverStation.reportWarning("ENCODER NOT HEALTHY, ENTERING FAILSAFE MODE", false);
+				DriverStation.reportWarning("ENCODER NOT HEALTHY, ENTERING FAILSAFE MODE: " + timeSinceMotorCommand + " " + atTarget() + " " + previous + " " + mElevatorTalon.getSelectedSensorPosition(0), false);
 			}
 
 			
@@ -221,7 +221,7 @@ public class MagicElevator {
 
 	public void drive() {
 		if (running) {
-			System.out.println("Current: " + mElevatorTalon.getSelectedSensorPosition(0) + ", Target: " + encoderLevels[targetLevel.ordinal()]);
+			//System.out.println("Current: " + mElevatorTalon.getSelectedSensorPosition(0) + ", Target: " + encoderLevels[targetLevel.ordinal()]);
 			mElevatorTalon.set(ControlMode.Position, encoderLevels[targetLevel.ordinal()]);
 			tiltSolenoid.set(Value.kReverse);
 		}
@@ -273,6 +273,7 @@ public class MagicElevator {
 	 */
 	private void clearEverything() {
 		targetLevel = elevatorLevel;
+		running = false;
 	}
 
 	/**

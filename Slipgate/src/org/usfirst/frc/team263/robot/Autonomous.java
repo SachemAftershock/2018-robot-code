@@ -123,6 +123,9 @@ public class Autonomous {
 		case eTriggerClimber:
 			mElevator.setClimber(Value.kReverse);
 			break;
+		case eCloseIntake:
+			mIntake.autonClose();
+			break;
 			
 		}
 		if (System.currentTimeMillis() - startTime > 2500 && mObjective != AutoObjective.eCubeAssist) mIsObjectiveFinished = true;
