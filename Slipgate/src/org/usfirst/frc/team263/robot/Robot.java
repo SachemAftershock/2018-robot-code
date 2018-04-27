@@ -273,7 +273,7 @@ public class Robot extends TimedRobot {
 		/////////////////////
 		//// Pneumatics /////
 		/////////////////////
-		elevator.toggleSolenoid();
+		elevator.toggleClimberSolenoid();
 		System.out.println("Please verify that elevator piston toggled");
 		while (!pDriver.getYButton()) {
 			continue;
@@ -295,9 +295,11 @@ public class Robot extends TimedRobot {
 		//elevator.toggleClimberSolenoid(); //TODO: toggleClimberSolenoid only goes one way
 		
 		//puts robot back to start posiiton
-		elevator.toggleSolenoid();
+		elevator.toggleClimberSolenoid();
 		intake.drive(CIMode.eDrop); //drop = toggle
 		
 		System.out.println("Health check complete!");
 	}
+	
+	
 }

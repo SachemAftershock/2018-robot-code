@@ -107,7 +107,7 @@ public class SWDrive {
 		mNavX = new AHRS(SPI.Port.kMXP);
 		Timer.delay(1);
 		System.out.println("NavX calibration: " + mNavX.isCalibrating());
-		
+
 		mElev = MagicElevator.getInstance();
 	}
 
@@ -127,30 +127,30 @@ public class SWDrive {
 						+ Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
 				double rightOutput = deadband(leftY, 0.1)
 						- Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
-				
-				
+
 				// Create logs of previous outputs for acceleration purposes
 				// Report proposed acceleration as zero if elevator is low
 				if (mElev.getHeight() < Constants.kAccelLimHeight) {
 					leftOutputPrev = leftOutput;
 					rightOutputPrev = rightOutput;
 				}
-				
-				
+
 				// Limit acceleration per loop
 				if (Math.abs(leftOutput - leftOutputPrev) > Constants.kAccelPercentPerLoop) {
-					leftOutput =  leftOutputPrev + Math.signum(leftOutput - leftOutputPrev) * Constants.kAccelPercentPerLoop;
+					leftOutput = leftOutputPrev
+							+ Math.signum(leftOutput - leftOutputPrev) * Constants.kAccelPercentPerLoop;
 				}
 				if (Math.abs(rightOutput - rightOutputPrev) > Constants.kAccelPercentPerLoop) {
-					rightOutput = rightOutputPrev + Math.signum(rightOutput - rightOutputPrev) * Constants.kAccelPercentPerLoop;
-				}			
-				
+					rightOutput = rightOutputPrev
+							+ Math.signum(rightOutput - rightOutputPrev) * Constants.kAccelPercentPerLoop;
+				}
+
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
 
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
-				
+
 				leftOutputPrev = leftOutput;
 				rightOutputPrev = rightOutput;
 
@@ -259,6 +259,11 @@ public class SWDrive {
 		}
 	}
 
+	public void zeroEncoders() {
+		mLeftMaster.setSelectedSensorPosition(0, 0, 0);
+		mRightMaster.setSelectedSensorPosition(0, 0, 0);
+	}
+
 	/**
 	 * Method to drive robot given controller of primary driver.
 	 * 
@@ -266,15 +271,16 @@ public class SWDrive {
 	 *            Primary driver's controller.
 	 */
 	public void drive(XboxController controller) {
-		 System.out.println("Right Master: " + mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " +mLeftMaster.getSelectedSensorPosition(0));
+		System.out.println("Right Master: " + mRightMaster.getSelectedSensorPosition(0) + ", Left Master: "
+				+ mLeftMaster.getSelectedSensorPosition(0));
 		double leftStick = -controller.getY(Hand.kLeft);
 		double rightStick = controller.getX(Hand.kRight);
 
 		// if tilt on and angle within [thresh,45] [thresh,45] -> [.1, .4]
-		
-		//TODO: check if this should be absolute valued
-		//			- i remember it working in gym but logically seems incorrect
-		//			- should only the comparison be absolute valued?
+
+		// TODO: check if this should be absolute valued
+		// - i remember it working in gym but logically seems incorrect
+		// - should only the comparison be absolute valued?
 		float pitch = Math.abs(mNavX.getPitch());
 		if (pitch > Constants.kTiltThresh && pitch < 45) {
 			double slope = (0.4 - 0.1) / (45 - Constants.kTiltThresh);

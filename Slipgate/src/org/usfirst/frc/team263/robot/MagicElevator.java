@@ -13,9 +13,10 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.GenericHID.Hand;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 
 /**
  * Controller for elevator system on robot.
@@ -269,4 +270,27 @@ public class MagicElevator {
 	public boolean isFinished() {
 		return atTarget();
 	}
+	
+
+  	public double getEncoder() {
+		return mElevatorTalon.getSelectedSensorPosition(0);
+	}
+
+  	public void zeroEncoder() {
+  		mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
+  	}
+  	
+	public void test(double period) {
+		mElevatorTalon.set(ControlMode.PercentOutput, 0.7);
+		Timer.delay(period);
+		mElevatorTalon.set(ControlMode.PercentOutput, 0.0);
+	}
+	
+	  public void toggleClimberSolenoid() { 
+		    if (climberSolenoid.get() == Value.kOff) { 
+		      climberSolenoid.set(Value.kReverse); 
+		    } else { 
+		      climberSolenoid.set(climberSolenoid.get() == Value.kForward ? Value.kReverse : Value.kForward); 
+		    } 
+		  } 
 }

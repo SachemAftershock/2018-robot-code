@@ -127,7 +127,7 @@ public class Elevator {
 		}
 		if (controller.getBumper(Hand.kRight) && !upPressed) {
 			targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
-			if(targetLevel.ordinal() == encoderLevels.length-1) {
+			if (targetLevel.ordinal() == encoderLevels.length - 1) {
 				new ControllerRumble(controller, 1).run();
 			}
 		} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
