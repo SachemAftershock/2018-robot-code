@@ -76,7 +76,7 @@ public class Constants {
 	final static int kElevatorUnitsPerRotation = 5120;
 	final static double kDistancePerRotationInches = 5.5;
 	final static double kElevatorRotationsPerInch = kElevatorUnitsPerRotation / kDistancePerRotationInches;
-	final static int kElevatorThreshhold = 10;
+	final static int kElevatorThreshhold = 75;
 	final static int kInitialCount = 2420;
 	final static int kMinBufferSize = 10;
 	final static double kItp = 10;

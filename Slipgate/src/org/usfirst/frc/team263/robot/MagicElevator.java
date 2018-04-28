@@ -221,8 +221,10 @@ public class MagicElevator {
 
 	public void drive() {
 		if (running) {
-			//System.out.println("Current: " + mElevatorTalon.getSelectedSensorPosition(0) + ", Target: " + encoderLevels[targetLevel.ordinal()]);
+			System.out.println("Current: " + mElevatorTalon.getSelectedSensorPosition(0) + ", Target: " + encoderLevels[targetLevel.ordinal()]);
 			mElevatorTalon.set(ControlMode.Position, encoderLevels[targetLevel.ordinal()]);
+			if(getDelta(targetLevel) < Constants.kElevatorThreshhold)
+				running = false;
 			tiltSolenoid.set(Value.kReverse);
 		}
 	}

@@ -95,7 +95,7 @@ public class Autonomous {
 			break;
 		case eElevatorLevel:
 			mDrive.setOpenLoop();
-			mDrive.drive(0, 0);
+			//mDrive.drive(0, 0);
 			if (isFirst) mElevator.toPosition(ElevatorPosition.values()[mSetpoint.get(0).intValue()]);	
 			mElevator.drive();
 			mIsObjectiveFinished = mElevator.isFinished();
