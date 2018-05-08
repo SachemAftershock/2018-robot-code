@@ -12,8 +12,6 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -42,9 +40,7 @@ public class SWDrive {
 	private Solenoid mSolenoid;
 	private MagicElevator mElev;
 	private double leftOutputPrev, rightOutputPrev;
-	private boolean mIsSetpointReached, startPressed;
-	boolean f;
-	int osci;
+	private boolean mIsSetpointReached;
 
 	/**
 	 * Gets instance of singleton SWDrive.
@@ -68,8 +64,6 @@ public class SWDrive {
 		mLeftSetpoint = 0;
 		mRightSetpoint = 0;
 		mTheta = 0;
-		f = false;
-		startPressed = false;
 		mVelocityRatio = 0;
 
 		// Initialize all master and slave motors.
@@ -98,6 +92,7 @@ public class SWDrive {
 
 		mSolenoid = new Solenoid(1, Constants.kDriveSolenoidPort);
 
+		// This may be reverse-logic depending on solenoid wiring.
 		setLowGear();
 		configureClosedLoop();
 
@@ -107,7 +102,8 @@ public class SWDrive {
 		mNavX = new AHRS(SPI.Port.kMXP);
 		Timer.delay(1);
 		System.out.println("NavX calibration: " + mNavX.isCalibrating());
-		
+
+		// Retrieve elevator singleton for some state monitoring.
 		mElev = MagicElevator.getInstance();
 	}
 
@@ -127,30 +123,30 @@ public class SWDrive {
 						+ Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
 				double rightOutput = deadband(leftY, 0.1)
 						- Constants.kTurningConstant[mGearingMode.ordinal()] * deadband(rightX, 0.1);
-				
-				
+
 				// Create logs of previous outputs for acceleration purposes
 				// Report proposed acceleration as zero if elevator is low
 				if (mElev.getHeight() < Constants.kAccelLimHeight) {
 					leftOutputPrev = leftOutput;
 					rightOutputPrev = rightOutput;
 				}
-				
-				
+
 				// Limit acceleration per loop
 				if (Math.abs(leftOutput - leftOutputPrev) > Constants.kAccelPercentPerLoop) {
-					leftOutput =  leftOutputPrev + Math.signum(leftOutput - leftOutputPrev) * Constants.kAccelPercentPerLoop;
+					leftOutput = leftOutputPrev
+							+ Math.signum(leftOutput - leftOutputPrev) * Constants.kAccelPercentPerLoop;
 				}
 				if (Math.abs(rightOutput - rightOutputPrev) > Constants.kAccelPercentPerLoop) {
-					rightOutput = rightOutputPrev + Math.signum(rightOutput - rightOutputPrev) * Constants.kAccelPercentPerLoop;
-				}			
-				
+					rightOutput = rightOutputPrev
+							+ Math.signum(rightOutput - rightOutputPrev) * Constants.kAccelPercentPerLoop;
+				}
+
 				double[] output = { leftOutput, rightOutput };
 				normalize(output);
 
 				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
 				mRightMaster.set(ControlMode.PercentOutput, output[1]);
-				
+
 				leftOutputPrev = leftOutput;
 				rightOutputPrev = rightOutput;
 
@@ -164,21 +160,19 @@ public class SWDrive {
 							Constants.kDriveRKi[mGearingMode.ordinal()], Constants.kDriveRKd[mGearingMode.ordinal()],
 							Constants.kDriveRKf[mGearingMode.ordinal()], mTheta);
 				}
+
+				// Get PID output and map it to acceptable output if its
+				// magnitude is greater than one.
 				double u = PidController.getPidOutput();
-				double leftOutput = -u;
-				double rightOutput = u;
+				if (Math.abs(u) > 1) {
+					u /= u;
+				}
 
-				double[] output = { leftOutput, rightOutput };
-				normalize(output);
-
-				mLeftMaster.set(ControlMode.PercentOutput, output[0]);
-				mRightMaster.set(ControlMode.PercentOutput, output[1]);
+				mLeftMaster.set(ControlMode.PercentOutput, u);
+				mRightMaster.set(ControlMode.PercentOutput, -u);
 
 				mIsSetpointReached = PidController.withinEpsilon();
 			} else if (mDriveMode == DriveMode.eLinear) {
-				// TODO: add motion profiling to linear movement.
-				// Using PIDF with encoders right now to drive directly to the
-				// setpoints.
 				mLeftMaster.set(ControlMode.Position, mLeftSetpoint);
 				mRightMaster.set(ControlMode.Position, mRightSetpoint);
 
@@ -187,30 +181,28 @@ public class SWDrive {
 						&& (Math.abs(mRightMaster.getSelectedSensorPosition(0)
 								- mRightSetpoint) <= Constants.kDriveError[mGearingMode.ordinal()]);
 			} else if (mDriveMode == DriveMode.eCubeAssist) {
-				// TODO: add distance information. This can be done in the
-				// future after we decide on where the Limelight is mounted.
 				if (Limelight.isTarget()) {
 					// If this is the first loop of the PID, the PID must be
 					// initalized.
-					if (mPreviousDriveMode != DriveMode.eRotational || mPreviousGearingMode != mGearingMode) {
+					if (mPreviousDriveMode != DriveMode.eCubeAssist || mPreviousGearingMode != mGearingMode) {
 						PidController.initRotationalPid(Constants.kDriveRKp[mGearingMode.ordinal()],
 								Constants.kDriveRKi[mGearingMode.ordinal()],
 								Constants.kDriveRKd[mGearingMode.ordinal()],
 								Constants.kDriveRKf[mGearingMode.ordinal()], mNavX.getYaw() + Limelight.getTx());
 					}
+
+					// This system works by continually updating the setpoint,
+					// so this has to be changed every loop.
 					PidController.updateSP(mNavX.getYaw() + Limelight.getTx());
 
 					double leftOutput = 0;
 					double rightOutput = 0;
 
+					// If the robot is facing the cube, drive forward. Keep
+					// rotating if it's not.
 					if (PidController.withinEpsilon()) {
-						System.out.println("Forward phase");
-						leftOutput = 0.3;
-						rightOutput = 0.3;
-						Timer.delay(0.2);
-						mIsSetpointReached = true;
+						setLinearDistance(10);
 					} else {
-						f = false;
 						leftOutput = -PidController.getPidOutput();
 						rightOutput = PidController.getPidOutput();
 					}
@@ -223,8 +215,8 @@ public class SWDrive {
 
 					mIsSetpointReached = PidController.withinEpsilon();
 				} else {
-					System.out.println("Searching...");
-					// TODO: Add back controller feedback here.
+					// Search for a cube by slowly rotating in a given
+					// direction.
 					if (mCubeAssistDirection == Direction.eClockwise) {
 						mLeftMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 						mRightMaster.set(ControlMode.PercentOutput, -Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
@@ -233,7 +225,7 @@ public class SWDrive {
 						mRightMaster.set(ControlMode.PercentOutput, Constants.kCubeSeekSpeed[mGearingMode.ordinal()]);
 					}
 
-					mIsSetpointReached |= false;
+					mIsSetpointReached = false;
 				}
 			} else if (mDriveMode == DriveMode.eCurve) {
 				// If this is the first loop of the PID, the PID must be
@@ -266,19 +258,19 @@ public class SWDrive {
 	 *            Primary driver's controller.
 	 */
 	public void drive(XboxController controller) {
-		//System.out.println("Right Master: " + mRightMaster.getSelectedSensorPosition(0) + ", Left Master: " +mLeftMaster.getSelectedSensorPosition(0));
 		double leftStick = -controller.getY(Hand.kLeft);
 		double rightStick = controller.getX(Hand.kRight);
 
-		// if tilt on and angle within [thresh,45] [thresh,45] -> [.1, .4]
-		
-		//TODO: check if this should be absolute valued
-		//			- i remember it working in gym but logically seems incorrect
-		//			- should only the comparison be absolute valued?
-		float pitch = Math.abs(mNavX.getPitch());
-		if (pitch > Constants.kTiltThresh && pitch < 45) {
+		// Correct tilt if abs(tilt) > tiltThresh
+		// Map to 10-40% output
+
+		// TODO: check if this should be absolute valued
+		// - i remember it working in gym but logically seems incorrect
+		// - should only the comparison be absolute valued?
+		float pitch = mNavX.getPitch();
+		if (Math.abs(pitch) > Constants.kTiltThresh && Math.abs(pitch) < 45) {
 			double slope = (0.4 - 0.1) / (45 - Constants.kTiltThresh);
-			double correctionOffset = slope * pitch - Constants.kTiltThresh;
+			double correctionOffset = slope * (pitch - Constants.kTiltThresh);
 			double[] tmp = { leftStick + correctionOffset, rightStick + correctionOffset };
 			normalize(tmp);
 			leftStick = tmp[0];
@@ -523,7 +515,8 @@ public class SWDrive {
 		/**
 		 * Sees if the controller is in a state of allowable error.
 		 * 
-		 * @return True if controller is within allowable error, false otherwise.
+		 * @return True if controller is within allowable error, false
+		 *         otherwise.
 		 */
 		public static boolean withinEpsilon() {
 			error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
