@@ -307,6 +307,11 @@ public class SWDrive {
 		mDriveMode = DriveMode.eOpenLoop;
 	}
 
+	/**
+	 * Gets current yaw measurement for debugging purposes.
+	 * 
+	 * @return Current yaw
+	 */
 	public double getYaw() {
 		return mNavX.getYaw();
 	}
@@ -546,15 +551,19 @@ public class SWDrive {
 			double error = 0;
 			if (rotation) {
 				error = rotationalError(SWDrive.getInstance().mNavX.getYaw(), setPoint);
+				// Negligible errors should be ignored to signify moving states in sm
 				error = Math.abs(error) > Constants.kDriveREpsilon[mGearingMode.ordinal()] ? error : 0;
+				// In cube assist, angle tolerance isn't as big of a deal.
 				if (SWDrive.getInstance().mDriveMode == DriveMode.eCubeAssist) {
 					error = Math.abs(error) > 5 * Constants.kDriveREpsilon[mGearingMode.ordinal()] ? error : 0;
 
 				}
 			}
+			// This runs in constant time, so no need to incorporate dt here
 			integral += error;
 			double u = Kp * error + Ki * integral + Kd * (error - previousError);
 			previousError = error;
+			// Make sure output overcomes stiction
 			if (Math.abs(u) < Constants.kDriveRStaticFr[mGearingMode.ordinal()]) {
 				u += Math.signum(u) * Constants.kDriveRStaticFr[mGearingMode.ordinal()];
 			}
@@ -582,6 +591,9 @@ public class SWDrive {
 		}
 	}
 
+	/**
+	 * @return PID Controller Output
+	 */
 	public double getPid() {
 		return PidController.getPidOutput();
 	}
