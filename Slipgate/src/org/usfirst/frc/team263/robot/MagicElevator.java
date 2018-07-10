@@ -13,6 +13,7 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -37,6 +38,9 @@ public class MagicElevator {
 	private DigitalOutput override;
 	private int[] encoderLevels;
 	private int currentCount;
+	private double timeSinceMotorCommand;
+	private double previous;
+	private boolean encoderHealthy;
 
 	/**
 	 * Constructor for magic elevator class
@@ -46,24 +50,24 @@ public class MagicElevator {
 		mElevatorTalon = new TalonSRX(Constants.kElevatorTalon);
 		mElevatorTalon.setNeutralMode(NeutralMode.Brake);
 		mElevatorTalon.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
-		mElevatorTalon.setSensorPhase(true);
-		mElevatorTalon.config_kP(0, 10.0, 0);
+		mElevatorTalon.setSensorPhase(false);
+		mElevatorTalon.config_kP(0, 3.0, 0);
 		mElevatorTalon.config_kI(0, 0.0, 0);
 		mElevatorTalon.config_kD(0, 0.0, 0);
 		mElevatorTalon.config_kF(0, 0.0, 0);
+		mElevatorTalon.setInverted(true);
 		mElevatorTalon.configMotionAcceleration(1000, 0);
 		mElevatorTalon.configMotionCruiseVelocity(5000, 0);
 		mElevatorTalon.config_IntegralZone(0, 200, 0);
 		mElevatorTalon.configClosedloopRamp(0, 256);
 		mElevatorTalon.configOpenloopRamp(0, 256);
 		mElevatorTalon.configAllowableClosedloopError(0, Constants.kElevatorThreshhold, 0);
-		mElevatorTalon.setSelectedSensorPosition(0, Constants.kInitialCount, 0); // TODO: CHECK DOCUMENTATION
 
 		mElevatorTalon.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
 				LimitSwitchNormal.NormallyOpen, 0);
 		mElevatorTalon.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector,
 				LimitSwitchNormal.NormallyOpen, 0);
-		
+
 		climberVictor = new VictorSPX(Constants.kClimberVictor);
 		climberVictor.setNeutralMode(NeutralMode.Brake);
 		climberSolenoid = new DoubleSolenoid(0, Constants.kClimberSolFwd, Constants.kClimberSolRev);
@@ -74,7 +78,7 @@ public class MagicElevator {
 
 		// TODO: replace with actual values taken from open-loop control on elevator
 		// elevator { reserved, ground, vault, switch, minScale, midScale, maxScale }
-		encoderLevels = new int[] { -1, 0, 460, 3400, 8000, 10000, 11000 };
+		encoderLevels = new int[] { -1, 0, 263, /*1410*/ 2000, 4000, 4650, 5100 };
 		tiltSolenoid = new DoubleSolenoid(0, Constants.kElevatorSolFwd, Constants.kElevatorSolRev);
 		currentCount = Constants.kInitialCount;
 
@@ -88,9 +92,12 @@ public class MagicElevator {
 		nudgeDownPressed = false;
 		startPressed = false;
 		r3Pressed = false;
+		encoderHealthy = true;
 
 		// Manual override for kill switch
 		override = new DigitalOutput(Constants.kOverride);
+
+		timeSinceMotorCommand = 0;
 	}
 
 	/**
@@ -110,43 +117,52 @@ public class MagicElevator {
 	 */
 	public void drive(XboxController controller) {
 		currentCount = mElevatorTalon.getSelectedSensorPosition(0);
-		
+		System.out.println("ElevatorEncoder: " + currentCount);
 		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) != 0) {
 			mElevatorTalon.set(ControlMode.PercentOutput, deadband(-controller.getY(Hand.kLeft), 0.1));
+			timeSinceMotorCommand = 0;
+		} else if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && !running) {
+			mElevatorTalon.set(ControlMode.PercentOutput, 0.1);
+			timeSinceMotorCommand = 0;
+		} else {
+			if (controller.getBumper(Hand.kRight) && !upPressed) {
+				targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
+			} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
+				targetLevel = ElevatorPosition.values()[Math.max(targetLevel.ordinal() - 1, 1)];
+			} else if (controller.getBumper(Hand.kLeft) && controller.getBumper(Hand.kRight)) {
+				clearEverything();
+				targetLevel = elevatorLevel;
+			} else if (controller.getPOV() == 0 && !nudgeUpPressed) {
+				encoderLevels[elevatorLevel.ordinal()] += 20;
+				executeHead();
+			} else if (controller.getPOV() == 180 && !nudgeDownPressed) {
+				encoderLevels[elevatorLevel.ordinal()] -= 20;
+				executeHead();
+			} else if (controller.getStickButton(Hand.kLeft) && !L3Pressed) {
+				executeHead();
+			}
+			
+			if (timeSinceMotorCommand < 100 && Math.abs(previous - mElevatorTalon.getSelectedSensorPosition(0)) < 10 && encoderHealthy) {
+				encoderHealthy = false;
+				DriverStation.reportWarning("ENCODER NOT HEALTHY, ENTERING FAILSAFE MODE: " + timeSinceMotorCommand + " " + atTarget() + " " + previous + " " + mElevatorTalon.getSelectedSensorPosition(0), false);
+			}
+
+			
+			if (running && !atTarget()) {
+				if (encoderHealthy) {
+					mElevatorTalon.set(ControlMode.MotionMagic, encoderLevels[targetLevel.ordinal()]);
+					timeSinceMotorCommand += 20;
+
+				} else {
+					mElevatorTalon.set(ControlMode.PercentOutput, 0);
+				}
+			}
 		}
-		if (deadband(controller.getTriggerAxis(Hand.kLeft), 0.5) == 0 && ltPressed && !running) {
-			mElevatorTalon.set(ControlMode.PercentOutput, 0.05);
-		}
-		
-		/*
-		if (controller.getBumper(Hand.kRight) && !upPressed) {
-			targetLevel = ElevatorPosition.values()[Math.min(targetLevel.ordinal() + 1, encoderLevels.length - 1)];
-		} else if (controller.getBumper(Hand.kLeft) && !downPressed) {
-			targetLevel = ElevatorPosition.values()[Math.max(targetLevel.ordinal() - 1, 1)];
-		} else if (controller.getBumper(Hand.kLeft) && controller.getBumper(Hand.kRight)) {
-			clearEverything();
-			targetLevel = elevatorLevel;
-		} else if (controller.getPOV() == 0 && !nudgeUpPressed) {
-			encoderLevels[elevatorLevel.ordinal()] += 20;
-			executeHead();
-		} else if (controller.getPOV() == 180 && !nudgeDownPressed) {
-			encoderLevels[elevatorLevel.ordinal()] -= 20;
-			executeHead();
-		} else if (controller.getStickButton(Hand.kLeft) && !L3Pressed) {
-			executeHead();
-		}
-		
-		
 
 		if (controller.getStartButton()) {
 			override.set(true);
 			LEDStrip.sendColor(LEDMode.eBlink);
 		}
-
-		if (running && !atTarget()) {
-			mElevatorTalon.set(ControlMode.MotionMagic, encoderLevels[targetLevel.ordinal()]);
-		}
-		*/
 
 		if (controller.getYButton() && !yPressed) {
 			tiltSolenoid.set(tiltSolenoid.get() == Value.kForward ? Value.kReverse : Value.kForward);
@@ -155,7 +171,7 @@ public class MagicElevator {
 		if (mElevatorTalon.getSensorCollection().isRevLimitSwitchClosed()) {
 			mElevatorTalon.setSelectedSensorPosition(0, 0, 0);
 		}
-		//System.out.println("Solenoid: " + climberSolenoid.get());
+		// System.out.println("Solenoid: " + climberSolenoid.get());
 		if (controller.getStickButton(Hand.kRight) && !r3Pressed) {
 			if (climberSolenoid.get() == Value.kOff) {
 				climberSolenoid.set(Value.kReverse);
@@ -178,25 +194,17 @@ public class MagicElevator {
 		r3Pressed = controller.getStickButton(Hand.kRight);
 
 		/*
-		if (controller.getStartButton() && !startPressed) {
-			targetLevel = ElevatorPosition.kGround;
-			executeHead();
-		}
-
-		if (getDelta(elevatorLevel) > Constants.kElevatorThreshhold) {
-			for (ElevatorPosition el : ElevatorPosition.values()) {
-				if (getDelta(el) < Constants.kElevatorThreshhold) {
-					elevatorLevel = el;
-					running = false;
-				}
-			}
-		}
-
-		if (running) {
-			mElevatorTalon.set(ControlMode.Position, encoderLevels[targetLevel.ordinal()]);
-		}
-		
-		*/
+		 * if (controller.getStartButton() && !startPressed) { targetLevel =
+		 * ElevatorPosition.kGround; executeHead(); }
+		 * 
+		 * if (getDelta(elevatorLevel) > Constants.kElevatorThreshhold) { for
+		 * (ElevatorPosition el : ElevatorPosition.values()) { if (getDelta(el) <
+		 * Constants.kElevatorThreshhold) { elevatorLevel = el; attaralse; } } }
+		 * 
+		 * if (running) { mElevatorTalon.set(ControlMode.Position,
+		 * encoderLevels[targetLevel.ordinal()]); }
+		 * 
+		 */
 
 		upPressed = controller.getBumper(Hand.kRight);
 
@@ -207,17 +215,39 @@ public class MagicElevator {
 		yPressed = controller.getYButton();
 		nudgeDownPressed = controller.getPOV() == 180;
 		startPressed = controller.getStartButton();
+		
+		previous = mElevatorTalon.getSelectedSensorPosition(0);
 	}
-	
+
 	public void drive() {
 		if (running) {
+			System.out.println("Current: " + mElevatorTalon.getSelectedSensorPosition(0) + ", Target: " + encoderLevels[targetLevel.ordinal()]);
 			mElevatorTalon.set(ControlMode.Position, encoderLevels[targetLevel.ordinal()]);
+			if(getDelta(targetLevel) < Constants.kElevatorThreshhold)
+				running = false;
 			tiltSolenoid.set(Value.kReverse);
 		}
 	}
 
 	private int getDelta(ElevatorPosition position) {
 		return Math.abs(currentCount - encoderLevels[position.ordinal()]);
+	}
+
+	public void initEncoder() {
+		mElevatorTalon.setSelectedSensorPosition(Constants.kInitialCount, 0, 0);
+	}
+
+	public double getHeight() {
+		return mElevatorTalon.getSelectedSensorPosition(0) / encoderLevels[6];
+	}
+
+	public boolean zeroLevel() {
+		double time = System.currentTimeMillis();
+		while (mElevatorTalon.getSelectedSensorPosition(0) > 10 && System.currentTimeMillis() - time < 5000) {
+			mElevatorTalon.set(ControlMode.PercentOutput, -0.7);
+		}
+		return true;
+
 	}
 
 	private boolean atTarget() {
@@ -230,11 +260,12 @@ public class MagicElevator {
 	 * Not the Maximilien Robespierre style though.
 	 */
 	private void executeHead() {
+		timeSinceMotorCommand = 0;
 		if (!atTarget()) {
 			running = true;
 		}
 	}
-	
+
 	public void setClimber(Value value) {
 		climberSolenoid.set(value);
 	}
@@ -244,6 +275,7 @@ public class MagicElevator {
 	 */
 	private void clearEverything() {
 		targetLevel = elevatorLevel;
+		running = false;
 	}
 
 	/**

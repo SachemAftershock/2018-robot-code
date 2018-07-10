@@ -19,20 +19,24 @@ public class Constants {
 	final static double[] kDriveKf = { 0.00, 0.00 };
 	final static int[] kDriveAccel = { 1000, 1000 };
 	final static int[] kDriveCruiseVelocity = { 5000, 5000 };
-	final static int[] kDriveError = { 100, 10 };
+	final static int[] kDriveError = { 200, 10 }; //[0] was 100, 
 	final static int[] kDriveIZone = { 200, 200 };
 	final static int[] kDriveRampRate = { 256, 256 };
 	final static double[] kCubeSeekSpeed = { 0.60, 0.45 };
 	final static double kDriveWheelLength = 23.5;
 	final static double kDriveMultiplier = 0.25;
+	final static double kAccelPercentPerLoop = 0.04;
+	final static double kAccelLimHeight = 0.5;
 
 	// Rotational PID Constants
-	final static double[] kDriveRKp = { 0.010, 0.003 };
+	//final static double[] kDriveRKp = { 0.010, 0.003 };
+	final static double[] kDriveRKp = { 0.0105, 0.003 };
 	final static double[] kDriveRKi = { 0.000, 0.000 };
 	final static double[] kDriveRKd = { 0.030, 0.03 };
 	final static double[] kDriveRKf = { 0.00, 0.00 };
 	final static double[] kDriveRStaticFr = { 0.175, 0.095 };
-	final static double[] kDriveREpsilon = { 0.5, 0.5 };
+	//final static double[] kDriveREpsilon = { 1.0, 0.5 };
+	final static double[] kDriveREpsilon = { 1.5, 0.5 };
 
 	// Curve PID Constants
 	final static double[] kDriveCKp = { 0.005, 0.03 };
@@ -72,8 +76,8 @@ public class Constants {
 	final static int kElevatorUnitsPerRotation = 5120;
 	final static double kDistancePerRotationInches = 5.5;
 	final static double kElevatorRotationsPerInch = kElevatorUnitsPerRotation / kDistancePerRotationInches;
-	final static int kElevatorThreshhold = 10;
-	final static int kInitialCount = 4250;
+	final static int kElevatorThreshhold = 75;
+	final static int kInitialCount = 2420;
 	final static int kMinBufferSize = 10;
 	final static double kItp = 10;
 	final static double kT1 = 200;
@@ -87,4 +91,6 @@ public class Constants {
 	final static int kClimberSolFwd = 2;
 	final static int kClimberSolRev = 5;
 	final static int kClimberVictor = 0;
+	
+	final static int kTiltThresh = 15;
 }

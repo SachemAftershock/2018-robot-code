@@ -137,10 +137,13 @@ public class CubeIntake {
 
 	public void autonIntake() {
 		drive(CIMode.eIn);
-		Timer.delay(0.3);
 		drive(CIMode.eDrop);
-		Timer.delay(0.3);
-		drive(CIMode.eStandby);
+		drive(CIMode.eIn);
+	}
+	
+	public void autonClose() {
+		
+		drive(CIMode.eDrop);
 	}
 
 }
