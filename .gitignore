@@ -12,6 +12,7 @@
 
 # Package Files #
 *.jar
+!*gradle-wrapper.jar
 *.war
 *.ear
 *.tar.gz
@@ -74,3 +75,7 @@ local.properties
 
 # JNI Shared Library
 .so
+
+# Added Stuff for VS Code
+*.bin
+*.lock
