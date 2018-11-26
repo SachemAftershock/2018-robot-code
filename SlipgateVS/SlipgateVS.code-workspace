@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "Slipgate"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic"
+	}
+}
